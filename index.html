@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REMPLACER — Atelier de stéréotaxie / Stereotaxic Workshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bibliothèques pour l'export (chargées une seule fois) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --dark: #0f1923;
+      --blue: #1a3a5c;
+      --mid: #2e6ea6;
+      --accent: #e8a020;
+      --teal: #00897b;
+      --light: #f4f7fb;
+      --white: #ffffff;
+      --grey: #6b7280;
+      --text: #1f2937;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* --- LANG TOGGLE --- */
+    .lang-toggle {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      z-index: 1000;
+      display: flex;
+      gap: 0;
+      border-radius: 2rem;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      background: var(--dark);
+    }
+    .lang-btn {
+      padding: 0.4rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+    }
+    .lang-btn.active { background: var(--accent); color: var(--dark); }
+
+    /* --- LANG HIDE (CORRIGÉ) --- */
+    [data-lang="en"] { display: none !important; }
+    body.en [data-lang="fr"] { display: none !important; }
+    body.en [data-lang="en"] { display: block !important; }
+
+    /* --- HERO --- */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--dark) 0%, var(--blue) 60%, #1a4a6e 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(46,110,166,0.4) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(0,137,123,0.25) 0%, transparent 50%);
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(232,160,32,0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      border-radius: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      animation: fadeDown 0.8s ease both;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      font-weight: 900;
+      color: white;
+      line-height: 1.05;
+      max-width: 900px;
+      position: relative;
+      animation: fadeDown 0.9s 0.1s ease both;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: rgba(255,255,255,0.7);
+      max-width: 700px;
+      margin-top: 1.5rem;
+      line-height: 1.7;
+      position: relative;
+      animation: fadeDown 1s 0.2s ease both;
+    }
+    .hero-since {
+      margin-top: 3rem;
+      display: flex;
+      gap: 3rem;
+      position: relative;
+      animation: fadeDown 1.1s 0.3s ease both;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat strong {
+      display: block;
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .hero-stat span {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      animation: bounce 2s infinite;
+    }
+    .scroll-hint::after { content: ' ↓'; }
+
+    /* --- SECTIONS --- */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.8rem;
+    }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      color: var(--blue);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+    .accent-line {
+      width: 3rem;
+      height: 3px;
+      background: var(--accent);
+      margin-bottom: 2rem;
+      border-radius: 2px;
+    }
+    p { line-height: 1.8; color: var(--grey); margin-bottom: 1rem; }
+    p strong { color: var(--text); }
+
+    /* --- SEQUENCE --- */
+    .seq-bg { background: var(--light); }
+    .seq-grid {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .seq-item {
+      flex: 1;
+      min-width: 220px;
+      max-width: 280px;
+      background: white;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .seq-item:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+    .seq-item img { width: 100%; height: 200px; object-fit: cover; }
+    .seq-label {
+      padding: 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--blue);
+      text-align: center;
+    }
+    .seq-arrow {
+      font-size: 1.8rem;
+      color: var(--accent);
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    /* --- 3 TEMPS --- */
+    .temps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .temps-card {
+      border-radius: 1rem;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+    .temps-card:hover { transform: translateY(-4px); }
+    .temps-card:nth-child(1) { background: #ebf3fb; }
+    .temps-card:nth-child(2) { background: #fff8ec; }
+    .temps-card:nth-child(3) { background: #ebf5ee; }
+    .temps-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem;
+      font-weight: 900;
+      opacity: 0.1;
+      position: absolute;
+      top: 0.5rem;
+      right: 1rem;
+      line-height: 1;
+      color: var(--blue);
+    }
+    .temps-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .temps-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--blue);
+      margin-bottom: 0.75rem;
+    }
+    .temps-card p { font-size: 0.92rem; margin: 0; }
+
+    /* --- QUOTE --- */
+    .quote-section {
+      background: var(--dark);
+      padding: 5rem 2rem;
+      text-align: center;
+    }
+    blockquote {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      font-weight: 400;
+      font-style: italic;
+      color: white;
+      max-width: 800px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.5;
+    }
+    blockquote em { color: var(--accent); font-style: normal; }
+    .quote-author {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* --- TRANSITION SECTION --- */
+    .transition-section {
+      background: white; /* ou var(--light) pour un fond plus doux */
+      padding: 4rem 2rem; /* légèrement moins que tes sections (5rem) pour un effet de "pont" */
+      text-align: center;
+    }
+
+    .transition-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .transition-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 3vw, 2.2rem); /* taille intermédiaire entre p et h2 */
+      font-weight: 600;
+      color: var(--blue);
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+    }
+
+    .transition-text {
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      line-height: 1.7;
+      color: var(--text);
+      margin: 0;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .transition-text strong {
+      color: var(--mid); /* bleu plus vif pour les mots-clés */
+    }    
+
+    /* --- 3R --- */
+    .r3-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 2.5rem;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    }
+    .r3-card { padding: 2rem; text-align: center; }
+    .r3-card:nth-child(1) { background: var(--teal); }
+    .r3-card:nth-child(2) { background: var(--mid); }
+    .r3-card:nth-child(3) { background: var(--blue); }
+    .r3-letter {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: rgba(255,255,255,0.2);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .r3-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .r3-desc { font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.5; }
+
+    /* --- GLP1 --- */
+    .glp-bg { background: var(--light); }
+    .glp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+      margin-top: 2rem;
+    }
+    .glp-stat-box {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      border-top: 4px solid var(--accent);
+    }
+    .glp-stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .glp-stat-label { font-size: 0.9rem; color: var(--grey); line-height: 1.5; }
+
+    /* --- GIRCOR --- */
+    .gircor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .gircor-card {
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .gircor-header {
+      padding: 1rem 1.5rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: white;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .gircor-card:first-child .gircor-header { background: var(--mid); }
+    .gircor-card:last-child .gircor-header { background: #e07020; }
+    .gircor-total {
+      padding: 1.5rem;
+      background: white;
+      text-align: center;
+      border-bottom: 1px solid var(--light);
+    }
+    .gircor-total strong {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      display: block;
+      line-height: 1;
+    }
+    .gircor-card:first-child .gircor-total strong { color: var(--mid); }
+    .gircor-card:last-child .gircor-total strong { color: #e07020; }
+    .gircor-total span { font-size: 0.8rem; color: var(--grey); }
+    .gircor-items { background: white; padding: 1rem 1.5rem; }
+    .gircor-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--light);
+    }
+    .gircor-row:last-child { border: none; }
+    .gircor-row span:last-child { font-weight: 600; color: var(--blue); }
+    .gircor-source { font-size: 0.72rem; color: var(--grey); margin-top: 1rem; font-style: italic; }
+
+    /* --- GALLERY --- */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+    .gallery-item {
+      border-radius: 0.75rem;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+    .gallery-item:hover { transform: scale(1.02); }
+    .gallery-item.large { grid-column: span 2; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 220px; }
+    .gallery-item .caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: white;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .gallery-item:hover .caption { opacity: 1; }
+
+    /* --- BRUSSELS --- */
+    .brussels-bg { background: var(--dark); }
+    .brussels-bg h2 { color: white; }
+    .brussels-bg .section-tag { color: var(--accent); }
+    .brussels-bg .accent-line { background: var(--accent); }
+    .brussels-bg p { color: rgba(255,255,255,0.65); }
+    .brussels-bg p strong { color: white; }
+    .brussels-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 3rem;
+      align-items: center;
+      margin-top: 2rem;
+    }
+    .brussels-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .brussels-stat {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .brussels-stat strong {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .brussels-stat span { font-size: 0.9rem; color: rgba(255,255,255,0.65); }
+    .brussels-photos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .brussels-photos img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+      transition: transform 0.3s;
+    }
+    .brussels-photos img:first-child {
+      grid-column: span 2;
+      height: 260px;
+    }
+    .brussels-photos img:hover { transform: scale(1.02); }
+
+    /* --- IMPACT --- */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    .impact-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      border-bottom: 3px solid var(--accent);
+      transition: transform 0.3s;
+    }
+    .impact-card:hover { transform: translateY(-4px); }
+    .impact-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .impact-label { font-size: 0.82rem; color: var(--grey); line-height: 1.4; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* --- CONTACT --- */
+    .contact-section {
+      background: var(--light);
+      text-align: center;
+      padding: 5rem 2rem;
+    }
+    .contact-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 3rem;
+      max-width: 600px;
+      margin: 2rem auto 0;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    }
+    .contact-card p { font-size: 1rem; margin-bottom: 2rem; }
+    .btn {
+      display: inline-block;
+      background: var(--blue);
+      color: white;
+      padding: 0.9rem 2.5rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: background 0.25s, transform 0.25s;
+      letter-spacing: 0.03em;
+    }
+    .btn:hover { background: var(--mid); transform: translateY(-2px); }
+    .btn-accent { background: var(--accent); color: var(--dark); }
+    .btn-accent:hover { background: #d4901a; }
+
+    /* --- FOOTER --- */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* --- ANIMATIONS --- */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+      .glp-grid, .brussels-grid, .r3-grid,
+      .gircor-grid, .impact-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: 1fr 1fr; }
+      .gallery-item.large { grid-column: span 2; }
+      .brussels-photos img:first-child { grid-column: span 2; }
+      .seq-arrow { display: none; }
+
+      /* Hero : stats sur deux lignes pour éviter le débordement */
+      .hero-since {
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0 1rem;
+      }
+      .hero-stat { min-width: 5rem; }
+      .hero-stat strong { font-size: 1.8rem; }
+
+      /* Calculateur : une colonne sur mobile */
+      .calc-two-col {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+      }
+
+      /* Section générale : padding réduit */
+      section { padding: 3rem 1rem; }
+      .hero { padding: 5rem 1rem 3rem; }
+    }
+
+    /* --- TOOLTIPS --- */
+    .tip-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .tip-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.1rem;
+      height: 1.1rem;
+      border-radius: 50%;
+      background: var(--grey);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      line-height: 1;
+      transition: background 0.2s;
+      /* important : pas de outline intrusif sur mobile */
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tip-btn:hover, .tip-btn.active { background: var(--mid); }
+    .tip-box {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 0.5rem);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--dark);
+      color: rgba(255,255,255,0.9);
+      font-size: 0.78rem;
+      line-height: 1.55;
+      padding: 0.75rem 1rem;
+      border-radius: 0.6rem;
+      width: 260px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 200;
+      pointer-events: none;
+    }
+    .tip-box::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--dark);
+    }
+    .tip-box.active { display: block; }
+    /* Sur mobile : bulle full-width ancrée à gauche si débordement */
+    @media (max-width: 480px) {
+      .tip-box {
+        width: 220px;
+        left: 0;
+        transform: none;
+      }
+      .tip-box::after { left: 1rem; transform: none; }
+    }
+
+    /* --- SLIDERS STYLE --- */
+    input[type="range"] {
+      cursor: pointer;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #ddd;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    button[onclick*="glp1"]:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LANG TOGGLE -->
+<div class="lang-toggle">
+  <button class="lang-btn active" onclick="setLang('fr')">FR</button>
+  <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="hero-tag" data-lang="fr">Atelier de médiation scientifique · Depuis 2017</span>
+  <span class="hero-tag" data-lang="en">Science outreach workshop · Since 2017</span>
+  <h1>
+    <em>REMPLACER</em>…<br>
+    <span data-lang="fr">le chercheur… quel impact<br>sur notre santé&nbsp;?</span>
+    <span data-lang="en">the researcher… what impact<br>on our health&nbsp;?</span>
+  </h1>
+  <p class="hero-sub" data-lang="fr">Un atelier pour toucher le cerveau du bout des doigts — sans toucher à un seul animal.</p>
+  <p class="hero-sub" data-lang="en"><em style="color:var(--accent); font-style:normal;">REMPLACER</em> — French for "Replace" — is the name of this workshop and a direct reference to the first of the 3Rs in animal research ethics.<br><span style="opacity:0.7;">A hands-on workshop to explore the brain — without touching a single animal.</span></p>
+  <div class="hero-since">
+    <div class="hero-stat"><strong>2017</strong><span data-lang="fr">Depuis</span><span data-lang="en">Since</span></div>
+    <div class="hero-stat"><strong>~300</strong><span data-lang="fr">participants/an</span><span data-lang="en">participants/year</span></div>
+    <div class="hero-stat"><strong>~1 000</strong><span data-lang="fr">au total</span><span data-lang="en">total</span></div>
+    <div class="hero-stat"><strong>🌍</strong><span data-lang="fr">Bruxelles 2025</span><span data-lang="en">Brussels 2025</span></div>
+  </div>
+  <div class="scroll-hint" data-lang="fr">Découvrir</div>
+  <div class="scroll-hint" data-lang="en">Discover</div>
+</section>
+
+<!-- SEQUENCE -->
+<section class="seq-bg">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Innovation · Dispositif</span>
+    <span class="section-tag" data-lang="en">Innovation · Device</span>
+    <h2 data-lang="fr">De l'atlas numérique au cerveau fantôme</h2>
+    <h2 data-lang="en">From digital atlas to phantom brain</h2>
+    <div class="accent-line"></div>
+    <p data-lang="fr">Tout a été conçu en interne : le moule 3D modélisé d'après une anatomie réelle de souris, les cerveaux en agarose fabriqués à la main, et la version portable pour les événements hors les murs.</p>
+    <p data-lang="en">Everything was designed in-house: the 3D mould modelled from real mouse anatomy, the hand-made agarose brains, and the portable version for off-site events.</p>
+    <div class="seq-grid">
+      <div class="seq-item">
+        <img src="yhrvZhHJdyi0y4zo.jpeg" alt="3D brain model">
+        <div class="seq-label" data-lang="fr">🖥️ Rendu 3D du cerveau</div>
+        <div class="seq-label" data-lang="en">🖥️ 3D brain render</div>
+      </div>
+      <div class="seq-arrow">→</div>
+      <div class="seq-item">
+        <img src="FrbbvLGXwAAfFu4.jpeg" alt="3D printed mould">
+        <div class="seq-label" data-lang="fr">🖨️ Moule imprimé en 3D</div>
+        <div class="seq-label" data-lang="en">🖨️ 3D printed mould</div>
+      </div>
+      <div class="seq-arrow">→</div>
+      <div class="seq-item">
+        <img src="GIkpgbxWcAAW18H.jpeg" alt="Agarose brains">
+        <div class="seq-label" data-lang="fr">🧠 Cerveaux en agarose</div>
+        <div class="seq-label" data-lang="en">🧠 Agarose brains</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 TEMPS -->
+<section>
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Déroulement · Format</span>
+    <span class="section-tag" data-lang="en">Structure · Format</span>
+    <h2 data-lang="fr">L'atelier en trois temps</h2>
+    <h2 data-lang="en">Three-part workshop</h2>
+    <div class="accent-line"></div>
+    <div class="temps-grid">
+      <div class="temps-card">
+        <div class="temps-num">1</div>
+        <div class="temps-icon">🔬</div>
+        <h3 data-lang="fr">La recherche</h3>
+        <h3 data-lang="en">The science</h3>
+        <p data-lang="fr">Comment le cerveau contrôle-t-il la prise alimentaire ? Quels outils utilisons-nous pour comprendre l'obésité ? Le cadre scientifique est posé, la curiosité éveillée.</p>
+        <p data-lang="en">How does the brain control food intake? What tools do we use to study obesity? The scientific context is set, curiosity awakened.</p>
+      </div>
+      <div class="temps-card">
+        <div class="temps-num">2</div>
+        <div class="temps-icon">🧠</div>
+        <h3 data-lang="fr">L'expérimentation</h3>
+        <h3 data-lang="en">The experiment</h3>
+        <p data-lang="fr">Chacun s'approprie le cadre stéréotaxique, positionne sa canule et réalise sa propre injection. Un petit 1/100ème de mm pour le chercheur, de grandes avancées pour nos patients.</p>
+        <p data-lang="en">Each participant handles the stereotaxic frame, positions the cannula and performs their own injection. A tiny 1/100th of a mm for the researcher, huge advances for patients.</p>
+      </div>
+      <div class="temps-card">
+        <div class="temps-num">3</div>
+        <div class="temps-icon">🗣️</div>
+        <h3 data-lang="fr">Le débat</h3>
+        <h3 data-lang="en">The debate</h3>
+        <p data-lang="fr">Maintenant les gens ont des choses à dire. Ils ont manipulé, ils ont vu. Le cadre réglementaire est présenté et le débat s'ouvre sur des bases solides et factuelles.</p>
+        <p data-lang="en">Now people have things to say. They've experienced it. The regulatory framework is presented and the debate opens on solid, factual grounds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE BERNARD -->
+<div class="quote-section">
+  <blockquote>
+    « Si l'on considérait une théorie comme parfaite et si l'on cessait de la vérifier par l'expérience scientifique, elle deviendrait une <em>doctrine</em>. »
+  </blockquote>
+  <div class="quote-author">Claude Bernard — Introduction à l'étude de la médecine expérimentale, 1865</div>
+</div>
+
+<!-- 3R -->
+<section>
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Éthique · Principe</span>
+    <span class="section-tag" data-lang="en">Ethics · Principle</span>
+    <h2 data-lang="fr">REMPLACER — quand c'est possible</h2>
+    <h2 data-lang="en">REPLACE — when possible</h2>
+    <div class="accent-line"></div>
+    <p data-lang="fr">L'atelier est lui-même une démonstration vivante du premier R. Mais il n'occulte pas les limites : certaines questions biologiques ne peuvent encore se résoudre qu'in vivo. <strong>Remplacer quand on peut, réduire et raffiner quand on ne peut pas.</strong></p>
+    <p data-lang="en">The workshop is itself a living demonstration of the first R. But it doesn't hide the limits: some biological questions can only be resolved in vivo. <strong>Replace when possible, reduce and refine when not.</strong></p>
+    <div class="r3-grid">
+      <div class="r3-card">
+        <div class="r3-letter">R</div>
+        <div class="r3-title">Remplacer · Replace</div>
+        <div class="r3-desc" data-lang="fr">Trouver des alternatives à l'utilisation d'animaux</div>
+        <div class="r3-desc" data-lang="en">Find alternatives to animal use</div>
+      </div>
+      <div class="r3-card">
+        <div class="r3-letter">R</div>
+        <div class="r3-title">Réduire · Reduce</div>
+        <div class="r3-desc" data-lang="fr">Utiliser le moins d'animaux possible</div>
+        <div class="r3-desc" data-lang="en">Use as few animals as possible</div>
+      </div>
+      <div class="r3-card">
+        <div class="r3-letter">R</div>
+        <div class="r3-title">Raffiner · Refine</div>
+        <div class="r3-desc" data-lang="fr">Améliorer le bien-être animal</div>
+        <div class="r3-desc" data-lang="en">Improve animal welfare</div>
+      </div>
+    </div>
+    <p style="margin-top:1rem; font-size:0.8rem;" data-lang="fr">Source : FC3R — <a href="https://www.fc3r.com" target="_blank">www.fc3r.com</a> / Russel & Burch 1959, loi européenne 2010</p>
+    <p style="margin-top:1rem; font-size:0.8rem;" data-lang="en">Source: FC3R — <a href="https://www.fc3r.com" target="_blank">www.fc3r.com</a> / Russel & Burch 1959, EU law 2010</p>
+  </div>
+</section>
+
+<!-- AVANT LES GLP-1 -->
+<section>
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Contexte · Histoire thérapeutique</span>
+    <span class="section-tag" data-lang="en">Context · Treatment history</span>
+    <h2 data-lang="fr">Avant les GLP-1 : des décennies d'impasse</h2>
+    <h2 data-lang="en">Before GLP-1: decades with no real solution</h2>
+    <div class="accent-line"></div>
+    <div class="glp-grid">
+      <div>
+        <p data-lang="fr">Pendant des décennies, les médecins n'avaient quasiment rien à proposer contre l'obésité sévère. Les médicaments ? Une succession d'espoirs déçus : la fenfluramine retirée pour des lésions valvulaires cardiaques, la sibutramine pour ses effets cardiovasculaires, le rimonabant — antagoniste CB1 du système endocannabinoïde, une piste hypothalamique directe — retiré dès 2008 pour risque de dépression et d'idées suicidaires. Quant à l'orlistat, malgré une meilleure tolérance, il n'induisait qu'une perte de poids modeste.</p>
+        <p data-lang="en">For decades, physicians had almost nothing to offer against severe obesity. Drugs? A string of disappointments: fenfluramine withdrawn for heart valve damage, sibutramine for cardiovascular risks, rimonabant — a CB1 endocannabinoid system antagonist, a direct hypothalamic target — withdrawn as early as 2008 for depression and suicidal ideation risk. And orlistat, though better tolerated, only produced modest weight loss.</p>
+        <p data-lang="fr">La chirurgie bariatrique a comblé ce vide pour les cas les plus sévères, avec une efficacité réelle. Mais son accès reste très limité : <strong>moins de 1 % des patients éligibles sont opérés</strong>. Coût, risques, réticences — la chirurgie n'est pas une réponse à l'échelle de l'épidémie.</p>
+        <p data-lang="en">Bariatric surgery filled the gap for the most severe cases, with real effectiveness. But its access remains very limited: <strong>fewer than 1% of eligible patients undergo surgery</strong>. Cost, risk, reluctance — surgery was never a population-scale solution.</p>
+        <p data-lang="fr" style="font-size:0.8rem; margin-top:1rem;">ASMBS 2026 — Moins de 1% des patients cliniquement éligibles à la chirurgie bariatrique sont opérés chaque année aux États-Unis (270 089 chirurgies en 2023 pour >25 millions de patients éligibles).</p>
+        <p data-lang="en" style="font-size:0.8rem; margin-top:1rem;">ASMBS 2026 — Fewer than 1% of clinically eligible patients undergo bariatric surgery each year in the US (270,089 surgeries in 2023 for >25 million eligible patients).</p>
+      </div>
+      <div>
+        <div class="glp-stat-box" style="border-top-color: #e74c3c;">
+          <div class="glp-stat-num" style="color:#e74c3c; font-size:1.9rem;">Fen-phen · Sibutramine<br>Rimonabant · Orlistat</div>
+          <div class="glp-stat-label" data-lang="fr">Retirés du marché ou efficacité insuffisante —<br>une longue série d'échecs thérapeutiques</div>
+          <div class="glp-stat-label" data-lang="en">Withdrawn or insufficiently effective —<br>a long series of therapeutic failures</div>
+        </div>
+        <div class="glp-stat-box" style="margin-top:1rem; border-top-color: var(--mid);">
+          <div class="glp-stat-num" style="color:var(--mid);">&lt; 1 %</div>
+          <div class="glp-stat-label" data-lang="fr">des patients éligibles à la chirurgie bariatrique<br>sont effectivement opérés<br><small style="font-weight:400; font-size:0.75rem; color:var(--grey);">ASMBS 2026</small></div>
+          <div class="glp-stat-label" data-lang="en">of patients eligible for bariatric surgery<br>actually undergo the procedure<br><small style="font-weight:400; font-size:0.75rem; color:var(--grey);">ASMBS 2026</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VOLONTÉ & BIOLOGIE -->
+<section class="glp-bg">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Science · Idées reçues</span>
+    <span class="section-tag" data-lang="en">Science · Misconceptions</span>
+    <h2 data-lang="fr">Obèse par manque de volonté&nbsp;? La science dit non.</h2>
+    <h2 data-lang="en">Obese from lack of willpower? Science says no.</h2>
+    <div class="accent-line"></div>
+    <div class="glp-grid">
+      <div>
+        <p data-lang="fr">C'est le préjugé le plus répandu — et le moins fondé. <strong>L'obésité n'est pas un défaut de caractère : c'est une maladie à base biologique.</strong> Il est scientifiquement indéfendable d'expliquer l'épidémie mondiale par une chute soudaine de la volonté à partir des années 1970.</p>
+        <p data-lang="en">It's the most common prejudice — and the least founded. <strong>Obesity is not a character flaw: it is a biologically based disease.</strong> The idea that a global drop in willpower since the 1970s could explain the epidemic is scientifically indefensible.</p>
+        <p data-lang="fr">Le poids est régulé par le cerveau — l'hypothalamus intègre en permanence des signaux hormonaux (leptine, ghréline, insuline) et défend activement un point d'équilibre contre toute perte de poids. L'étude STILTS (Cambridge, 2019) a comparé l'ADN de 14 000 personnes — minces, poids normal, obèses sévères : les personnes minces ne l'étaient pas par vertu, mais parce qu'elles portaient <strong>moins de variants génétiques</strong> favorisant la prise de poids.</p>
+        <p data-lang="en">Body weight is regulated by the brain — the hypothalamus continuously integrates hormonal signals (leptin, ghrelin, insulin) and actively defends a set point against weight loss. The STILTS study (Cambridge, 2019) compared the DNA of 14,000 people — thin, normal weight, severely obese: thin people were not thin through virtue, but because they carried <strong>fewer genetic variants</strong> predisposing to weight gain.</p>
+        <p data-lang="fr" style="font-size:0.8rem; margin-top:1rem;">Keogh, Farooqi et al., PLOS Genetics 2019 / Volkow et al., Trends Cogn Sci 2011 / Blüher, Diabetes Obes Metab 2025</p>
+        <p data-lang="en" style="font-size:0.8rem; margin-top:1rem;">Keogh, Farooqi et al., PLOS Genetics 2019 / Volkow et al., Trends Cogn Sci 2011 / Blüher, Diabetes Obes Metab 2025</p>
+      </div>
+      <div>
+        <div class="glp-stat-box" style="border-top-color: var(--teal);">
+          <div class="glp-stat-num" style="color:var(--teal);">14 000</div>
+          <div class="glp-stat-label" data-lang="fr">personnes séquencées — minces, obèses, témoins —<br>pour démontrer le rôle des gènes dans le poids<br><em style="font-size:0.75rem;">(étude STILTS, Cambridge 2019)</em></div>
+          <div class="glp-stat-label" data-lang="en">people sequenced — thin, obese, controls —<br>to demonstrate the genetic basis of weight<br><em style="font-size:0.75rem;">(STILTS study, Cambridge 2019)</em></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE FAROOQI -->
+<div class="quote-section">
+  <blockquote data-lang="fr">
+    « Si vous êtes mince, souvenez-vous : vous n'êtes pas moralement supérieur — vous avez simplement eu de la <em>chance</em>. »
+  </blockquote>
+  <blockquote data-lang="en">
+    "If you are thin, remember: you are not morally superior — just <em>lucky</em>."
+  </blockquote>
+  <div class="quote-author">Pr. Sadaf Farooqi — Wellcome-MRC Institute of Metabolic Science, University of Cambridge</div>
+</div>
+
+<!-- GLP1 -->
+<section style="background: white;">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Science · Impact médical</span>
+    <span class="section-tag" data-lang="en">Science · Medical impact</span>
+    <h2 data-lang="fr">La science n'est pas une opinion</h2>
+    <h2 data-lang="en">Science is not a matter of opinion</h2>
+    <div class="accent-line"></div>
+    <div class="glp-grid">
+      <div>
+        <p data-lang="fr">Les agonistes du GLP-1 — Ozempic, Wegovy — sont issus de <strong>50 ans de recherche fondamentale</strong> menée en grande partie sur des rongeurs. Sans ces décennies de travail sur des modèles animaux, pas de perspective de traitement pour le milliard de personnes obèses dans le monde.</p>
+        <p data-lang="en">GLP-1 agonists — Ozempic, Wegovy — are the result of <strong>50 years of fundamental research</strong> conducted largely on rodents. Without these decades of animal model work, no prospect of treatment for the billion people living with obesity worldwide.</p>
+        <p data-lang="fr">Des médicaments qui n'en sont qu'à leurs débuts : la recherche sur les GLP-1 ouvre aujourd'hui des pistes pour de nouvelles molécules, de nouvelles voies d'administration, de nouvelles combinaisons thérapeutiques.</p>
+        <p data-lang="en">These treatments are just the beginning: GLP-1 research is now opening paths to new molecules, new delivery routes, new therapeutic combinations.</p>
+        <p style="font-size:0.8rem; margin-top:1rem;">World Obesity 2024 / NCD-RisC, The Lancet 2024</p>
+      </div>
+      <div>
+        <div class="glp-stat-box">
+          <div class="glp-stat-num">&gt;1 Mrd</div>
+          <div class="glp-stat-label" data-lang="fr">personnes obèses dans le monde<br><em style="font-size:0.75rem;">(World Obesity 2024)</em></div>
+          <div class="glp-stat-label" data-lang="en">people living with obesity worldwide<br><em style="font-size:0.75rem;">(World Obesity 2024)</em></div>
+        </div>
+        <div class="glp-stat-box" style="margin-top:1rem; border-top-color: var(--teal);">
+          <div class="glp-stat-num" style="color:var(--teal);">50 ans</div>
+          <div class="glp-stat-label" data-lang="fr">de recherche animale pour développer les GLP-1</div>
+          <div class="glp-stat-label" data-lang="en">of animal research to develop GLP-1 therapies</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSITION SECTION -->
+<section class="transition-section">
+  <div class="container">
+    <div class="transition-content">
+      <h3 class="transition-title" data-lang="fr">Au-delà des bénéfices santé…</h3>
+      <h3 class="transition-title" data-lang="en">Beyond health benefits…</h3>
+      <p class="transition-text" data-lang="fr">
+        … au-delà de leurs bénéfices médicaux, ces traitements pourraient avoir un <strong>impact indirect</strong> sur les animaux d'élevage et les émissions de <strong>CO₂</strong> liées à l'alimentation.
+      </p>
+      <p class="transition-text" data-lang="en">
+        … these drugs could also <strong>potentially</strong> reduce the number of farm animals and food-related <strong>CO₂</strong> emissions.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- GLP-1 IMPACT CALCULATOR -->
+<section style="background: var(--light);">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Impact · Calculateur interactif</span>
+    <span class="section-tag" data-lang="en">Impact · Interactive calculator</span>
+
+    <h2 data-lang="fr">Agonistes GLP-1 : Impact indirect sur l’élevage et le CO₂</h2>
+    <h2 data-lang="en">GLP-1 Agonists: Indirect impact on livestock and CO₂</h2>
+
+    <div class="accent-line"></div>
+
+    <p data-lang="fr" style="margin-bottom: 2rem; font-size: 1.05rem; color: var(--text); max-width: 800px;">
+      <strong>50 ans de recherche animale</strong> pour développer Ozempic et Wegovy. Quel pourrait être l'impact indirect sur l'élevage et le CO₂ ? Ajustez les deux côtés de la balance — y compris la part des calories d'origine animale.
+    </p>
+    <p data-lang="en" style="margin-bottom: 2rem; font-size: 1.05rem; color: var(--text); max-width: 800px;">
+      <strong>50 years of animal research</strong> to develop Ozempic and Wegovy. How many farm animals could <em>potentially</em> not be produced? And what's the carbon balance? Adjust both sides of the equation — including the share of calories from animal products.
+    </p>
+
+    <div style="background: white; border-radius: 1.25rem; padding: 2.5rem; box-shadow: 0 4px 32px rgba(0,0,0,0.08); margin: 2.5rem 0;">
+
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--blue); margin-bottom: 0.5rem;">
+          <span data-lang="fr">Paramètres du modèle</span>
+          <span data-lang="en">Model parameters</span>
+        </h3>
+        <p style="color: var(--grey); font-size: 0.95rem;">
+          <span data-lang="fr">Ajustez les deux côtés, coûts R&D et bénéfices, pour explorer tous les scénarios</span>
+          <span data-lang="en">Adjust both sides, R&D costs and benefits, to explore all scenarios</span>
+        </p>
+      </div>
+
+      <!-- Scenario Buttons -->
+      <div style="margin-bottom: 2rem; text-align: center;">
+        <p style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem;">
+          <span data-lang="fr">Scénarios prédéfinis</span>
+          <span data-lang="en">Predefined scenarios</span>
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <button onclick="glp1_setScenario('conservative')" style="padding: 0.6rem 1.5rem; border: 2px solid var(--teal); background: white; color: var(--teal); font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.25s;" data-lang="fr">Conservateur</button>
+          <button onclick="glp1_setScenario('conservative')" style="padding: 0.6rem 1.5rem; border: 2px solid var(--teal); background: white; color: var(--teal); font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.25s;" data-lang="en">Conservative</button>
+          <button onclick="glp1_setScenario('realistic')" style="padding: 0.6rem 1.5rem; border: 2px solid var(--accent); background: var(--accent); color: white; font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.25s;" data-lang="fr">Réaliste</button>
+          <button onclick="glp1_setScenario('realistic')" style="padding: 0.6rem 1.5rem; border: 2px solid var(--accent); background: var(--accent); color: white; font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.25s;" data-lang="en">Realistic</button>
+          <button onclick="glp1_setScenario('optimistic')" style="padding: 0.6rem 1.5rem; border: 2px solid var(--mid); background: white; color: var(--mid); font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.25s;" data-lang="fr">Optimiste</button>
+          <button onclick="glp1_setScenario('optimistic')" style="padding: 0.6rem 1.5rem; border: 2px solid var(--mid); background: white; color: var(--mid); font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.25s;" data-lang="en">Optimistic</button>
+        </div>
+      </div>
+
+      <!-- Two-Column Sliders Layout -->
+      <div class="calc-two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
+
+        <!-- LEFT: R&D Costs -->
+        <div style="background: rgba(231,76,60,0.05); border-radius: 1rem; padding: 1.5rem; border-left: 4px solid #e74c3c;">
+          <p style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #e74c3c; margin-bottom: 1.25rem;">
+            <span data-lang="fr">🧫 Coûts R&D</span>
+            <span data-lang="en">🧫 R&D Costs</span>
+          </p>
+
+          <!-- Animaux R&D -->
+          <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              <span data-lang="fr">Animaux utilisés en R&D</span>
+              <span data-lang="en">Animals used in R&D</span>
+              <strong style="color: #e74c3c;" id="glp1-rd-animals-val">500 000</strong>
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-animals')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-animals">
+                  <span data-lang="fr">Toute la filière GLP-1 depuis 1976. PubMed recense ~11 000 publications sur modèles animaux (1976–2026). Le ratio ~50–100 animaux/publication est une estimation indicative dérivée du ratio global animaux/publications (Taylor &amp; Rego Alvarez, Alternatives to Lab Animals, 2019 — doi:10.1177/0261192919899853) — aucun consensus publié n'existe sur ce ratio spécifique.</span>
+                  <span data-lang="en">Entire GLP-1 pipeline since 1976. PubMed lists ~11,000 animal-model publications (1976–2026). The ~50–100 animals/publication ratio is an indicative estimate derived from the global animals/publications ratio (Taylor &amp; Rego Alvarez, Alternatives to Lab Animals, 2019 — doi:10.1177/0261192919899853) — no published consensus exists for this specific ratio.</span>
+                </span>
+              </span>
+            </label>
+            <input type="range" id="glp1-rd-animals" min="10000" max="2000000" step="10000" value="500000" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>10k</span><span>2M</span>
+            </small>
+          </div>
+
+          <!-- CO2 R&D -->
+          <div>
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              <span data-lang="fr">CO₂ R&D total</span>
+              <span data-lang="en">Total R&D CO₂</span>
+              <strong style="color: #e74c3c;" id="glp1-rd-co2-val">500 000</strong> t
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-co2')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-co2">
+                  <span data-lang="fr">Inclut production, essais cliniques et logistique. Estimation recherche fondamentale : ~11 000 publications GLP-1 × 68 t CO₂/publication (mesuré empiriquement à l'Université de Groningen, Freese et al., RSC Sustainability 2024 — PMC11078267) = ~750 000 t. La fourchette 220k–1,6M t reflète l'incertitude selon les disciplines et pays.</span>
+                  <span data-lang="en">Includes manufacturing, clinical trials and logistics. Basic research estimate: ~11,000 GLP-1 publications × 68 t CO₂/publication (empirically measured at University of Groningen, Freese et al., RSC Sustainability 2024 — PMC11078267) = ~750,000 t. The range 220k–1.6M t reflects uncertainty across disciplines and countries.</span>
+                </span>
+              </span>
+            </label>
+            <input type="range" id="glp1-rd-co2" min="50000" max="2000000" step="50000" value="500000" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>50k t</span><span>2M t</span>
+            </small>
+          </div>
+        </div>
+
+        <!-- RIGHT: Benefits -->
+        <div style="background: rgba(0,137,123,0.05); border-radius: 1rem; padding: 1.5rem; border-left: 4px solid var(--teal);">
+          <p style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 1.25rem;">
+            <span data-lang="fr">🌍 Bénéfices traitement</span>
+            <span data-lang="en">🌍 Treatment Benefits</span>
+          </p>
+
+          <!-- Patients -->
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              <span data-lang="fr">Patients traités (2030)</span>
+              <span data-lang="en">Treated patients (2030)</span>
+              <strong style="color: var(--teal);" id="glp1-patients-val">80</strong>M
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-patients')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-patients">
+                  <span data-lang="fr">Selon l'OMS (décembre 2025) : plus d'<strong>1 milliard</strong> de personnes souffrent d'obésité dans le monde. Même avec une expansion rapide de la production, les GLP-1 <strong>n'atteindront pas 10% des patients éligibles d'ici 2030</strong>, soit moins de 100 millions. La valeur par défaut (80M) correspond à ce plafond OMS. Source : WHO Global Guideline on GLP-1 therapies, 1 Dec 2025.</span>
+                  <span data-lang="en">According to WHO (December 2025): more than <strong>1 billion</strong> people worldwide live with obesity. Even with rapid production expansion, GLP-1s are projected to reach <strong>fewer than 10% of those who could benefit by 2030</strong>, i.e. fewer than 100 million patients. The default value (80M) fits within this WHO ceiling. Source: WHO Global Guideline on GLP-1 therapies, 1 Dec 2025.</span>
+                </span>
+              </span>
+            </label>
+            <input type="range" id="glp1-patients" min="5" max="200" value="80" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>5M</span><span>200M</span>
+            </small>
+          </div>
+
+          <!-- Poids de départ -->
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              <span data-lang="fr">Poids moyen de départ</span>
+              <span data-lang="en">Average baseline weight</span>
+              <strong style="color: var(--teal);" id="glp1-weight-val">100</strong> kg
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-weight')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-weight">
+                  <span data-lang="fr">Poids moyen des patients en début de traitement. Utilisé pour calculer la réduction calorique journalière via la formule de déficit énergétique.</span>
+                  <span data-lang="en">Average patient weight at treatment start. Used to calculate daily caloric reduction via the energy deficit formula.</span>
+                </span>
+              </span>
+            </label>
+            <input type="range" id="glp1-weight" min="80" max="160" step="5" value="100" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>80 kg</span><span>160 kg</span>
+            </small>
+          </div>
+
+          <!-- % Perte de poids -->
+          <div style="margin-bottom: 0.5rem;">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              <span data-lang="fr">Perte de poids moyenne</span>
+              <span data-lang="en">Average weight loss</span>
+              <strong style="color: var(--teal);" id="glp1-wloss-val">15</strong>%
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-wloss')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-wloss">
+                  <span data-lang="fr">STEP 1 (sémaglutide, Wilding 2021, NEJM — PMID 33567185) : ~15% · STEP 3 (Wadden 2021, JAMA — PMID 33625476) : ~16% · SURMOUNT-1 (tirzépatide, Jastreboff 2022, NEJM) : ~22% · non-répondeurs : ~5%.</span>
+                  <span data-lang="en">STEP 1 (semaglutide, Wilding 2021, NEJM — PMID 33567185): ~15% · STEP 3 (Wadden 2021, JAMA — PMID 33625476): ~16% · SURMOUNT-1 (tirzepatide, Jastreboff 2022, NEJM): ~22% · non-responders: ~5%.</span>
+                </span>
+              </span>
+            </label>
+            <input type="range" id="glp1-wloss" min="5" max="25" step="1" value="15" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>5%</span><span>25%</span>
+            </small>
+          </div>
+
+          <!-- Réduction calorique calculée automatiquement -->
+          <div style="background: rgba(0,137,123,0.07); border-radius: 0.5rem; padding: 0.6rem 0.75rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.1rem;">🧮</span>
+            <div>
+              <span style="font-size: 0.78rem; color: var(--grey);">
+                <span data-lang="fr">Réduction calorique induite par la molécule :</span>
+                <span data-lang="en">Caloric reduction induced by the molecule:</span>
+              </span>
+              <strong style="color: var(--teal); font-size: 1rem; margin-left: 0.4rem;" id="glp1-kcal-computed">600</strong>
+              <span style="color: var(--teal); font-size: 0.85rem;"> kcal/j</span>
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-kcal')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-kcal">
+                  <span data-lang="fr">≈ poids × % perte × 7 700 kcal/kg ÷ 365 j. 7 700 kcal = équivalent énergétique du tissu adipeux (Heymsfield et al. 2012 ; Wishnofsky 1958). Ce calcul donne le déficit journalier annualisé moyen.</span>
+                  <span data-lang="en">≈ weight × % loss × 7,700 kcal/kg ÷ 365 d. 7,700 kcal = energy equivalent of adipose tissue (Heymsfield et al. 2012; Wishnofsky 1958). This gives the mean annualised daily energy deficit.</span>
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Years -->
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem;">
+              <span data-lang="fr">Durée traitement</span>
+              <span data-lang="en">Treatment duration</span>
+              <strong style="color: var(--teal);" id="glp1-years-val">7</strong>
+              <span data-lang="fr"> ans</span><span data-lang="en"> years</span>
+            </label>
+            <input type="range" id="glp1-years" min="3" max="15" value="7" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>3</span><span>15</span>
+            </small>
+          </div>
+
+          <!-- Kcal/animal -->
+          <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem;">
+              <span data-lang="fr">Kcal par animal moyen</span>
+              <span data-lang="en">Kcal per average animal</span>
+              <strong style="color: var(--teal);" id="glp1-kcal-animal-val">8 000</strong>
+            </label>
+            <label style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.25rem; font-size:0.9rem; font-weight:600; color:var(--text);">
+              <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-kcal-animal')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-kcal-animal">
+                  <span data-lang="fr">Énergie alimentaire moyenne par animal : Volaille ~2 000 kcal · Porc ~10 000 kcal · Bovin ~35 000 kcal. La valeur 8 000 kcal correspond à un mix majoritairement volaille. Source : données FAO/Agribalyse.</span>
+                  <span data-lang="en">Average food energy per animal: Poultry ~2,000 kcal · Pork ~10,000 kcal · Beef ~35,000 kcal. The 8,000 kcal default reflects a mostly poultry mix. Source: FAO/Agribalyse data.</span>
+                </span>
+              </span>
+            </label>
+            <input type="range" id="glp1-kcal-animal" min="2000" max="40000" step="1000" value="8000" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>2k</span><span>40k</span>
+            </small>
+          </div>
+
+          <!-- Part animale des calories -->
+          <div style="background: rgba(232,160,32,0.08); border-radius: 0.5rem; padding: 0.75rem; border-left: 3px solid var(--accent);">
+            <label style="display: block; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; font-size: 0.9rem;">
+              <span data-lang="fr">Part des calories d'origine animale</span>
+              <span data-lang="en">Share of calories from animal products</span>
+              <strong style="color: var(--accent);" id="glp1-animal-share-val">50</strong>%
+            </label>
+            <span class="tip-wrap" style="display:inline-flex;align-items:center;gap:0.3rem;vertical-align:middle;">
+                <button class="tip-btn" onclick="tipToggle('tip-slider-share')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-slider-share">
+                  <span data-lang="fr">0% = réduction sur sucres/ultra-transformés (impact nul sur l'élevage) · 100% = réduction entièrement sur produits animaux. Fourchette réaliste : 20–50%. Données de référence : environ 2/3 des protéines alimentaires proviennent de sources animales chez l'adulte américain (NHANES 2015–2018, USDA 2021). Sørensen et al. (JAMA Network Open 2026 — doi:10.1001/jamanetworkopen.2025.55449) montre une baisse des ultra-transformés et une hausse des protéines après GLP-1RA, ce qui suggère un profil réel plutôt dans la fourchette basse (20–40%).</span>
+                  <span data-lang="en">0% = reduction from sugars/ultra-processed foods (no livestock impact) · 100% = reduction entirely from animal products. Realistic range: 20–50%. Reference data: ~2/3 of dietary protein comes from animal sources among US adults (NHANES 2015–2018, USDA 2021). Sørensen et al. (JAMA Network Open 2026 — doi:10.1001/jamanetworkopen.2025.55449) shows a shift away from ultra-processed and toward protein after GLP-1RA, suggesting a realistic profile in the lower range (20–40%).</span>
+                </span>
+              </span>
+            <input type="range" id="glp1-animal-share" min="0" max="100" step="5" value="50" oninput="glp1_updateCalcs()">
+            <small style="display: flex; justify-content: space-between; color: var(--grey); font-size: 0.7rem; margin-top: 0.25rem;">
+              <span>0%</span><span>100%</span>
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Grid -->
+      <div id="glp1-results" style="background: var(--light); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem;">
+
+          <!-- Animaux-équivalents -->
+          <div style="border-left: 4px solid var(--teal); padding-left: 1.25rem;">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;">
+              <span class="tip-wrap">
+                <span data-lang="fr">Animaux-équivalents</span>
+                <span data-lang="en">Animal-equivalents</span>
+                <button class="tip-btn" onclick="tipToggle('tip-animals')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-animals">
+                  <span data-lang="fr">Nombre d'animaux d'élevage <em>potentiellement</em> non produits, calculé à partir du déficit calorique induit par la molécule. C'est un ordre de grandeur exploratoire, pas une prévision. La fourchette ci-dessous reflète l'incertitude sur le mix alimentaire.</span>
+                  <span data-lang="en">Number of farm animals <em>potentially</em> not produced, calculated from the molecule-induced caloric deficit. This is an exploratory order of magnitude, not a forecast. The range below reflects uncertainty in dietary mix.</span>
+                </span>
+              </span>
+            </p>
+            <p style="font-size: 0.65rem; color: var(--grey); margin-bottom: 0.4rem; font-style: italic;">
+              <span data-lang="fr">ordre de grandeur · selon hypothèses</span>
+              <span data-lang="en">order of magnitude · scenario-dependent</span>
+            </p>
+            <p style="font-size: 1.5rem; font-weight: 700; color: var(--teal); font-family: 'Playfair Display', serif;" id="glp1-animals">2.9T</p>
+            <p style="font-size: 0.65rem; color: var(--grey); margin-top: 0.25rem; font-style: italic;" id="glp1-range-animals"></p>
+          </div>
+
+          <!-- Ratio éthique -->
+          <div style="border-left: 4px solid var(--accent); padding-left: 1.25rem;">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;">
+              <span class="tip-wrap">
+                <span data-lang="fr">Ratio éthique</span>
+                <span data-lang="en">Ethical ratio</span>
+                <button class="tip-btn" onclick="tipToggle('tip-ratio')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-ratio">
+                  <span data-lang="fr">Ce ratio compare animaux de laboratoire et animaux d'élevage comme s'ils avaient la même valeur morale. C'est un choix discutable, d'autres façons de raisonner conduiraient à des conclusions différentes.</span>
+                  <span data-lang="en">This ratio compares laboratory and farm animals as if they had equal moral value. This is a debatable choice, other ways of reasoning would lead to different conclusions.</span>
+                </span>
+              </span>
+            </p>
+            <p style="font-size: 1.5rem; font-weight: 700; color: var(--accent); font-family: 'Playfair Display', serif;">
+              <span id="glp1-ratio">362M</span>:1
+            </p>
+            <p style="font-size: 0.65rem; color: var(--grey); margin-top: 0.25rem; font-style: italic;" id="glp1-range-ratio"></p>
+          </div>
+
+          <!-- CO₂ -->
+          <div style="border-left: 4px solid var(--mid); padding-left: 1.25rem;">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;">
+              <span class="tip-wrap">
+                <span data-lang="fr">CO₂ épargné/an</span>
+                <span data-lang="en">CO₂ saved/year</span>
+                <button class="tip-btn" onclick="tipToggle('tip-co2')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-co2">
+                  <span data-lang="fr">Estimation basée sur Ganatra et al. (ESC 2025), méta-analyse de 4 essais chez des patients insuffisants cardiaques sous GLP-1RA : ~695 kg CO₂eq/patient/an liés à la réduction calorique. Ce volet est méthodologiquement plus robuste que le calcul "animaux". Note : ces données portent sur des patients HFpEF ; l'extrapolation à la population générale obèse implique une incertitude supplémentaire.</span>
+                  <span data-lang="en">Estimate based on Ganatra et al. (ESC 2025), meta-analysis of 4 trials in heart failure patients on GLP-1RA: ~695 kg CO₂eq/patient/year from caloric reduction. This component is methodologically more robust than the "animals" calculation. Note: data are from HFpEF patients; extrapolation to the general obese population adds further uncertainty.</span>
+                </span>
+              </span>
+            </p>
+            <p style="font-size: 1.5rem; font-weight: 700; color: var(--mid); font-family: 'Playfair Display', serif;">
+              <span id="glp1-co2">49.6M</span> t
+            </p>
+            <p style="font-size: 0.65rem; color: var(--grey); margin-top: 0.25rem; font-style: italic;" id="glp1-range-co2"></p>
+          </div>
+
+          <!-- Payback animal -->
+          <div style="border-left: 4px solid #27ae60; padding-left: 1.25rem;">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;">
+              <span class="tip-wrap">
+                <span data-lang="fr">Payback animal</span>
+                <span data-lang="en">Animal payback</span>
+                <button class="tip-btn" onclick="tipToggle('tip-payback-a')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-payback-a">
+                  <span data-lang="fr">Durée nécessaire pour que le nombre d'animaux d'élevage potentiellement non produits égale le nombre d'animaux utilisés en R&D. Ex : 10 jours = après 10 jours de traitement à l'échelle mondiale, le "bilan" devient positif.</span>
+                  <span data-lang="en">Time needed for the number of farm animals potentially not produced to equal the number of animals used in R&D. E.g. 10 days = after 10 days of treatment at global scale, the "balance" turns positive.</span>
+                </span>
+              </span>
+            </p>
+            <p style="font-size: 1.5rem; font-weight: 700; color: #27ae60; font-family: 'Playfair Display', serif;">
+              <span id="glp1-payback-animal">10</span>
+              <span data-lang="fr" style="font-size:0.9rem;"> j</span>
+              <span data-lang="en" style="font-size:0.9rem;"> d</span>
+            </p>
+            <p style="font-size: 0.65rem; color: var(--grey); margin-top: 0.25rem; font-style: italic;" id="glp1-range-payback-animal"></p>
+          </div>
+
+          <!-- Payback CO₂ -->
+          <div style="border-left: 4px solid #f39c12; padding-left: 1.25rem;">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;">
+              <span class="tip-wrap">
+                <span data-lang="fr">Payback CO₂</span>
+                <span data-lang="en">CO₂ payback</span>
+                <button class="tip-btn" onclick="tipToggle('tip-payback-co2')" aria-label="Info">?</button>
+                <span class="tip-box" id="tip-payback-co2">
+                  <span data-lang="fr">Durée nécessaire pour que les émissions CO₂ évitées grâce au traitement compensent le CO₂ émis lors du développement du médicament (R&D, essais cliniques, fabrication).</span>
+                  <span data-lang="en">Time needed for the CO₂ emissions avoided through treatment to offset the CO₂ emitted during drug development (R&D, clinical trials, manufacturing).</span>
+                </span>
+              </span>
+            </p>
+            <p style="font-size: 1.5rem; font-weight: 700; color: #f39c12; font-family: 'Playfair Display', serif;">
+              <span id="glp1-payback-co2">10</span>
+              <span data-lang="fr" style="font-size:0.9rem;"> j</span>
+              <span data-lang="en" style="font-size:0.9rem;"> d</span>
+            </p>
+            <p style="font-size: 0.65rem; color: var(--grey); margin-top: 0.25rem; font-style: italic;" id="glp1-range-payback-co2"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Export Container (hidden, PNG only) -->
+      <div id="glp1-export-container" style="display: none; background: white; padding: 2.5rem; border-radius: 1rem; max-width: 700px;">
+        <h3 style="font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--blue); margin-bottom: 0.25rem; text-align: center;">GLP-1 Impact Calculator</h3>
+        <p style="text-align: center; color: var(--grey); font-size: 0.8rem; margin-bottom: 1.5rem;">Model Parameters &amp; Results · REMPLACER Workshop</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+
+          <!-- Export: R&D Costs -->
+          <div style="background: rgba(231,76,60,0.05); border-radius: 0.75rem; padding: 1.25rem; border-left: 3px solid #e74c3c;">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #e74c3c; margin-bottom: 1rem;">🧫 R&amp;D Costs</p>
+
+            <div style="margin-bottom: 1rem;">
+              <p style="font-weight: 600; color: var(--blue); font-size: 0.85rem; margin-bottom: 0.2rem;">Animals used in R&amp;D</p>
+              <p style="font-size: 0.75rem; color: var(--grey); margin-bottom: 0.4rem;">GLP-1 development pipeline</p>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="flex: 1; background: #ddd; height: 7px; border-radius: 3px; overflow: hidden;">
+                  <div id="glp1-exp-bar-rd-animals" style="background: #e74c3c; height: 100%; width: 8%;"></div>
+                </div>
+                <span style="font-weight: 700; color: #e74c3c; font-size: 0.85rem;" id="glp1-exp-rd-animals-txt">8,000</span>
+              </div>
+            </div>
+
+            <div>
+              <p style="font-weight: 600; color: var(--blue); font-size: 0.85rem; margin-bottom: 0.2rem;">Total R&amp;D CO₂</p>
+              <p style="font-size: 0.75rem; color: var(--grey); margin-bottom: 0.4rem;">Manufacturing, trials, logistics</p>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="flex: 1; background: #ddd; height: 7px; border-radius: 3px; overflow: hidden;">
+                  <div id="glp1-exp-bar-rd-co2" style="background: #e74c3c; height: 100%; width: 25%;"></div>
+                </div>
+                <span style="font-weight: 700; color: #e74c3c; font-size: 0.85rem;" id="glp1-exp-rd-co2-txt">500k t</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Export: Benefits -->
+          <div style="background: rgba(0,137,123,0.05); border-radius: 0.75rem; padding: 1.25rem; border-left: 3px solid var(--teal);">
+            <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); margin-bottom: 1rem;">🌍 Benefits</p>
+
+            <div style="margin-bottom: 0.75rem;">
+              <p style="font-weight: 600; color: var(--blue); font-size: 0.85rem; margin-bottom: 0.2rem;">Treated patients (2030)</p>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="flex: 1; background: #ddd; height: 7px; border-radius: 3px; overflow: hidden;">
+                  <div id="glp1-exp-bar-patients" style="background: var(--teal); height: 100%; width: 40%;"></div>
+                </div>
+                <span style="font-weight: 700; color: var(--teal); font-size: 0.85rem;"><span id="glp1-exp-patients-txt">80</span>M</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <p style="font-weight: 600; color: var(--blue); font-size: 0.85rem; margin-bottom: 0.2rem;">Caloric reduction/day <span style="font-weight:400; color:var(--grey); font-size:0.75rem;">(calculated)</span></p>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="flex: 1; background: #ddd; height: 7px; border-radius: 3px; overflow: hidden;">
+                  <div id="glp1-exp-bar-kcal" style="background: var(--teal); height: 100%; width: 60%;"></div>
+                </div>
+                <span style="font-weight: 700; color: var(--teal); font-size: 0.85rem;"><span id="glp1-exp-kcal-txt">600</span> kcal</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <p style="font-weight: 600; color: var(--blue); font-size: 0.85rem; margin-bottom: 0.2rem;">Treatment duration</p>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="flex: 1; background: #ddd; height: 7px; border-radius: 3px; overflow: hidden;">
+                  <div id="glp1-exp-bar-years" style="background: var(--teal); height: 100%; width: 47%;"></div>
+                </div>
+                <span style="font-weight: 700; color: var(--teal); font-size: 0.85rem;"><span id="glp1-exp-years-txt">7</span> yrs</span>
+              </div>
+            </div>
+
+            <div>
+              <p style="font-weight: 600; color: var(--blue); font-size: 0.85rem; margin-bottom: 0.2rem;">Kcal per animal (avg)</p>
+              <p style="font-size: 0.7rem; color: var(--grey); margin-bottom: 0.3rem;">Poultry ~2k · Pork ~10k · Beef ~35k</p>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div style="flex: 1; background: #ddd; height: 7px; border-radius: 3px; overflow: hidden;">
+                  <div id="glp1-exp-bar-animal" style="background: var(--teal); height: 100%; width: 20%;"></div>
+                </div>
+                <span style="font-weight: 700; color: var(--teal); font-size: 0.85rem;" id="glp1-exp-kcal-animal-txt">8,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export: Results -->
+        <div style="background: var(--light); border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1.25rem;">
+          <p style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 1rem;">RESULTS</p>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;">
+            <div style="border-left: 3px solid var(--teal); padding-left: 0.6rem;">
+              <p style="color: var(--grey); font-size: 0.7rem; margin-bottom: 0.2rem;">Animal-equivalents</p>
+              <p style="font-weight: 700; color: var(--teal); font-size: 1rem;" id="glp1-exp-animals">2.9T</p>
+            </div>
+            <div style="border-left: 3px solid var(--accent); padding-left: 0.6rem;">
+              <p style="color: var(--grey); font-size: 0.7rem; margin-bottom: 0.2rem;">Ethical ratio</p>
+              <p style="font-weight: 700; color: var(--accent); font-size: 1rem;" id="glp1-exp-ratio">362M:1</p>
+            </div>
+            <div style="border-left: 3px solid var(--mid); padding-left: 0.6rem;">
+              <p style="color: var(--grey); font-size: 0.7rem; margin-bottom: 0.2rem;">CO₂ saved/yr</p>
+              <p style="font-weight: 700; color: var(--mid); font-size: 1rem;" id="glp1-exp-co2">49.6M t</p>
+            </div>
+            <div style="border-left: 3px solid #27ae60; padding-left: 0.6rem;">
+              <p style="color: var(--grey); font-size: 0.7rem; margin-bottom: 0.2rem;">Animal payback</p>
+              <p style="font-weight: 700; color: #27ae60; font-size: 1rem;" id="glp1-exp-payback-animal">10 days</p>
+            </div>
+            <div style="border-left: 3px solid #f39c12; padding-left: 0.6rem;">
+              <p style="color: var(--grey); font-size: 0.7rem; margin-bottom: 0.2rem;">CO₂ payback</p>
+              <p style="font-weight: 700; color: #f39c12; font-size: 1rem;" id="glp1-exp-payback-co2">10 days</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export: Formula -->
+        <div style="background: rgba(232,160,32,0.1); padding: 1rem; border-radius: 0.5rem; border-left: 3px solid var(--accent); margin-bottom: 1rem;">
+          <p style="font-weight: 600; color: var(--blue); font-size: 0.8rem; margin-bottom: 0.4rem;">Formula</p>
+          <code style="color: var(--accent); font-size: 0.72rem;">Animal-equiv. = (Patients × Kcal/day × 365 × Years × Animal share) / Kcal/animal</code>
+        </div>
+
+        <p style="font-size: 0.65rem; color: var(--grey); text-align: center; border-top: 1px solid #ddd; padding-top: 0.75rem;">
+          REMPLACER Workshop · https://g0ub.github.io/remplacer/ · Neurocentre Magendie – INSERM U1215
+        </p>
+      </div>
+
+      <!-- Note épistémique : recadrage éthique uniquement (visible en permanence) -->
+      <div style="background: rgba(0,137,123,0.07); border-radius: 0.75rem; padding: 1.25rem; border-left: 4px solid var(--teal); margin-bottom: 2rem;">
+        <p style="font-size: 0.8rem; font-weight: 700; color: var(--teal); margin-bottom: 0.5rem; letter-spacing: 0.05em; text-transform: uppercase;">
+          <span data-lang="fr">⚠️ Recadrage éthique</span>
+          <span data-lang="en">⚠️ Ethical framing</span>
+        </p>
+        <p style="font-size: 0.85rem; color: var(--text); line-height: 1.65; margin: 0;">
+          <span data-lang="fr">Ce calculateur modélise l'<strong>effet pharmacologique de la molécule</strong> sur la réduction calorique, indépendamment du profil des patients — il ne sous-entend pas que les personnes souffrant d'obésité consomment davantage de produits animaux. L'obésité est une <strong>maladie à base biologique</strong>, non un comportement.</span>
+          <span data-lang="en">This calculator models the <strong>pharmacological effect of the molecule</strong> on caloric reduction, independently of patient profiles. It does not imply that people living with obesity consume more animal products. Obesity is a <strong>biologically based disease</strong>, not a behaviour.</span>
+        </p>
+      </div>
+
+      <!-- Bénéfices sociétaux non comptabilisés -->
+      <div style="background: rgba(26,58,92,0.04); border-radius: 0.75rem; padding: 1.25rem; border-left: 4px solid var(--blue); margin-bottom: 2rem;">
+        <p style="font-size: 0.8rem; font-weight: 700; color: var(--blue); margin-bottom: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase;">
+          <span data-lang="fr">📊 Périmètre volontairement restreint</span>
+          <span data-lang="en">📊 Deliberately limited scope</span>
+        </p>
+        <p style="font-size: 0.85rem; color: var(--text); line-height: 1.6; margin-bottom: 0.75rem;">
+          <span data-lang="fr">Ce calculateur ne comptabilise que <strong>deux externalités</strong> parmi beaucoup. Les bénéfices médicaux et sociétaux ne sont pas inclus :</span>
+          <span data-lang="en">This calculator only quantifies <strong>two externalities</strong> among many. Medical and societal benefits are not included:</span>
+        </p>
+        <div class="calc-two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1.5rem; margin-bottom: 0.9rem;">
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Réduction du diabète de type 2</span><span data-lang="en">Reduced type 2 diabetes</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Réduction du risque cardiovasculaire</span><span data-lang="en">Reduced cardiovascular risk</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Ralentissement des maladies rénales</span><span data-lang="en">Slowed kidney disease progression</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Amélioration de la qualité de vie</span><span data-lang="en">Improved quality of life</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Réduction potentielle de la consommation d'alcool</span><span data-lang="en">Potential reduction in alcohol consumption</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Gains de productivité</span><span data-lang="en">Productivity gains</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span><span data-lang="fr">Réduction des coûts de santé</span><span data-lang="en">Reduced healthcare costs</span></p>
+          <p style="font-size: 0.82rem; color: var(--grey); margin: 0; display: flex; align-items: baseline; gap: 0.4rem;"><span style="color: var(--teal); font-size: 0.75rem;">●</span>
+            <span data-lang="fr">Réduction potentielle du risque de certains cancers <em style="font-size:0.75rem;">(données observationnelles, ASCO 2026)</em></span>
+            <span data-lang="en">Potential reduced cancer risk <em style="font-size:0.75rem;">(observational data, ASCO 2026)</em></span>
+          </p>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text); line-height: 1.6; margin: 0; font-style: italic; border-top: 1px solid rgba(26,58,92,0.1); padding-top: 0.75rem;">
+          <span data-lang="fr">Même avec ce périmètre volontairement restreint à deux externalités, le bilan est déjà <strong>largement positif</strong> selon les hypothèses retenues. Inclure les bénéfices médicaux et sociétaux ne ferait que renforcer cette conclusion.</span>
+          <span data-lang="en">Even with this deliberately limited scope covering only two externalities, the balance is already <strong>strongly positive</strong> under the chosen assumptions. Including medical and societal benefits would only reinforce this conclusion.</span>
+        </p>
+      </div>
+
+      <!-- Export Buttons -->
+      <div style="background: rgba(232, 160, 32, 0.08); border-radius: 1rem; padding: 1.5rem; border-left: 4px solid var(--accent); margin-bottom: 2rem; text-align: center;">
+        <p style="font-weight: 600; color: var(--blue); margin-bottom: 1rem;">
+          <span data-lang="fr">📤 Exporter les résultats</span>
+          <span data-lang="en">📤 Export results</span>
+        </p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+          <button onclick="glp1_exportPNG()" style="padding: 0.5rem 1rem; background: var(--teal); color: white; border: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.25s;">
+            <span data-lang="fr">🖼️ Image complète</span>
+            <span data-lang="en">🖼️ Full image</span>
+          </button>
+          <button onclick="glp1_exportCSV()" style="padding: 0.5rem 1rem; background: var(--blue); color: white; border: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.25s;">
+            <span data-lang="fr">📊 CSV</span>
+            <span data-lang="en">📊 CSV</span>
+          </button>
+          <button onclick="glp1_exportEmail()" style="padding: 0.5rem 1rem; background: var(--accent); color: var(--dark); border: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.25s;">
+            <span data-lang="fr">✉️ Envoyer l'image</span>
+            <span data-lang="en">✉️ Send image</span>
+          </button>
+          <button onclick="glp1_shareLink()" style="padding: 0.5rem 1rem; background: var(--grey); color: white; border: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.25s;">
+            <span data-lang="fr">🔗 Partager</span>
+            <span data-lang="en">🔗 Share</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Explanation -->
+      <details style="background: rgba(232, 160, 32, 0.08); border-radius: 0.75rem; padding: 1.5rem; border-left: 4px solid var(--accent);">
+        <summary style="font-weight: 600; color: var(--blue); cursor: pointer; user-select: none;">
+          <span data-lang="fr">📖 Comment ça marche ?</span>
+          <span data-lang="en">📖 How does it work?</span>
+        </summary>
+        <div style="margin-top: 1.25rem; font-size: 0.9rem; color: var(--text); line-height: 1.6;">
+          <p style="margin-bottom: 1rem;">
+            <strong data-lang="fr">Formule :</strong>
+            <strong data-lang="en">Formula :</strong>
+          </p>
+          <code style="display: block; background: var(--dark); color: var(--accent); padding: 1rem; border-radius: 0.5rem; font-size: 0.8rem; margin-bottom: 1rem; overflow-x: auto;">
+            <span data-lang="fr">Kcal/jour = Poids(kg) × Perte(%) × 7 700 kcal/kg ÷ 365</span>
+            <span data-lang="en">Kcal/day = Weight(kg) × Loss(%) × 7,700 kcal/kg ÷ 365</span>
+          </code>
+          <code style="display: block; background: var(--dark); color: var(--accent); padding: 1rem; border-radius: 0.5rem; font-size: 0.8rem; margin-bottom: 1rem; overflow-x: auto;">
+            <span data-lang="fr">Animaux-équivalents = (Patients × Kcal/jour × 365 × Années × Part animale) / Kcal/animal</span>
+            <span data-lang="en">Animal-equivalents = (Patients × Kcal/day × 365 × Years × Animal share) / Kcal/animal</span>
+          </code>
+          <p style="margin-bottom: 0.5rem;">
+            <strong data-lang="fr">Sources :</strong>
+            <strong data-lang="en">Sources :</strong>
+          </p>
+          <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+            <li><strong>WHO Global Guideline on GLP-1 therapies (1 Dec 2025)</strong> — >1 milliard de personnes obèses dans le monde ; accès GLP-1 projeté < 10% des éligibles d'ici 2030</li>
+            <li><strong>Wilding et al. (STEP 1, NEJM 2021 — PMID 33567185)</strong> — Semaglutide 2.4mg: ~15% weight loss at 68 weeks</li>
+            <li><strong>Wadden et al. (STEP 3, JAMA 2021 — PMID 33625476 — doi:10.1001/jama.2021.1831)</strong> — Semaglutide + intensive behavioural therapy: ~16% weight loss</li>
+            <li><strong>Jastreboff et al. (SURMOUNT-1, NEJM 2022)</strong> — Tirzepatide: ~22% weight loss</li>
+            <li><strong>Freese et al. (RSC Sustainability 2024 — PMC11078267)</strong> — 68 t CO₂/publication mesurés empiriquement (Univ. Groningen) ; 10–37 t CO₂/chercheur/an selon discipline — base du calcul CO₂ R&D</li>
+            <li><strong>Taylor &amp; Rego Alvarez (Alternatives to Lab Animals, 2019 — doi:10.1177/0261192919899853)</strong> — estimation mondiale ~192M animaux/an (2015) via modèle de régression publications/animaux — base de la fourchette 50–100 animaux/publication</li>
+            <li><strong>NHANES 2015–2018 (USDA 2021)</strong> — ~2/3 des protéines alimentaires des adultes américains proviennent de sources animales — base du slider "part animale"</li>
+            <li><strong>Ganatra et al. (ESC Congress 2025, Madrid)</strong> — ~695 kg CO₂eq/patient/year de réduction liée à la baisse calorique chez des patients insuffisants cardiaques (HFpEF) sous GLP-1RA — méta-analyse de SELECT, FLOW, STEP-HFpEF, STEP-HFpEF DM — <em>résultat spécifique à cette population, extrapolation à la population générale obèse à considérer avec prudence</em></li>
+            <li><strong>Magkos et al. (Obesity 2020)</strong> — Obesity contributes ~700 megatons CO₂eq/year globally (~1.6% of GHG emissions)</li>
+            <li><strong data-lang="fr">7 700 kcal/kg</strong><strong data-lang="en">7,700 kcal/kg</strong>, <span data-lang="fr">équivalent énergétique du tissu adipeux (Heymsfield et al., 2012 ; Wishnofsky, 1958)</span><span data-lang="en">energy equivalent of adipose tissue (Heymsfield et al., 2012; Wishnofsky, 1958)</span></li>
+          </ul>
+          <p style="margin-bottom: 0.5rem; margin-top: 1.25rem;">
+            <strong data-lang="fr">🔗 Chaîne causale &amp; niveaux d'incertitude :</strong>
+            <strong data-lang="en">🔗 Causal chain &amp; uncertainty levels :</strong>
+          </p>
+          <div style="font-size: 0.82rem; color: var(--grey); background: var(--light); border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 1rem;">
+            <span data-lang="fr">Recherche animale <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ae60;vertical-align:middle;margin:0 2px;"></span> → GLP-1 <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ae60;vertical-align:middle;margin:0 2px;"></span> → perte de poids <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ae60;vertical-align:middle;margin:0 2px;"></span> → réduction calorique <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);vertical-align:middle;margin:0 2px;"></span> → baisse demande alimentaire <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);vertical-align:middle;margin:0 2px;"></span> → baisse production animale <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e74c3c;vertical-align:middle;margin:0 2px;"></span><br><small style="font-size:0.75rem;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#27ae60;vertical-align:middle;margin-right:3px;"></span> bien documenté &nbsp;·&nbsp; <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:middle;margin-right:3px;"></span> estimé · <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;vertical-align:middle;margin-right:3px;"></span> spéculatif (effets marché, exportations, prix)</small></span>
+            <span data-lang="en">Animal research <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ae60;vertical-align:middle;margin:0 2px;"></span> → GLP-1 <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ae60;vertical-align:middle;margin:0 2px;"></span> → weight loss <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#27ae60;vertical-align:middle;margin:0 2px;"></span> → caloric reduction <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);vertical-align:middle;margin:0 2px;"></span> → reduced food demand <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent);vertical-align:middle;margin:0 2px;"></span> → reduced animal production <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e74c3c;vertical-align:middle;margin:0 2px;"></span><br><small style="font-size:0.75rem;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#27ae60;vertical-align:middle;margin-right:3px;"></span> well documented &nbsp;·&nbsp; <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:middle;margin-right:3px;"></span> estimated · <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e74c3c;vertical-align:middle;margin-right:3px;"></span> speculative (market effects, exports, prices)</small></span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--grey); font-style: italic; margin: 0;">
+            <span data-lang="fr">Ce calculateur est un <strong style="color:var(--text);">outil de mise en perspective éthique</strong>, pas un modèle prédictif. Les résultats sont des ordres de grandeur exploratoires dépendant des hypothèses choisies.</span>
+            <span data-lang="en">This calculator is an <strong style="color:var(--text);">ethical perspective tool</strong>, not a predictive model. Results are exploratory orders of magnitude depending on chosen assumptions.</span>
+          </p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- GIRCOR -->
+<section>
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Données · Perspective</span>
+    <span class="section-tag" data-lang="en">Data · Perspective</span>
+    <h2 data-lang="fr">Nombre d'animaux utilisés par un Français au cours de sa vie</h2>
+    <h2 data-lang="en">Number of animals used by a French person over a lifetime</h2>
+    <div class="accent-line"></div>
+    <div class="gircor-grid">
+      <div class="gircor-card">
+        <div class="gircor-header" data-lang="fr">🔬 Pour la recherche</div>
+        <div class="gircor-header" data-lang="en">🔬 For research</div>
+        <div class="gircor-total">
+          <strong>2,48</strong>
+          <span data-lang="fr">animaux sur toute une vie</span>
+          <span data-lang="en">animals over a lifetime</span>
+        </div>
+        <div class="gircor-items">
+          <div class="gircor-row"><span>🐭 Souris / Mouse</span><span>1,68</span></div>
+          <div class="gircor-row"><span>🐀 Rat</span><span>0,18</span></div>
+          <div class="gircor-row"><span>🐟 Poisson / Fish</span><span>0,20</span></div>
+          <div class="gircor-row"><span>🐇 Lapin / Rabbit</span><span>0,22</span></div>
+          <div class="gircor-row"><span>🐕 Chien / Dog</span><span>0,005</span></div>
+          <div class="gircor-row"><span>🐒 Primate</span><span>0,004</span></div>
+        </div>
+      </div>
+      <div class="gircor-card">
+        <div class="gircor-header" data-lang="fr">🍽️ Pour l'alimentation</div>
+        <div class="gircor-header" data-lang="en">🍽️ For food</div>
+        <div class="gircor-total">
+          <strong>10 104</strong>
+          <span data-lang="fr">animaux sur toute une vie</span>
+          <span data-lang="en">animals over a lifetime</span>
+        </div>
+        <div class="gircor-items">
+          <div class="gircor-row"><span>🐔 Poulets / Chickens</span><span>1 227</span></div>
+          <div class="gircor-row"><span>🐟 Poissons / Fish</span><span>8 655</span></div>
+          <div class="gircor-row"><span>🐷 Cochons / Pigs</span><span>27</span></div>
+          <div class="gircor-row"><span>🐄 Bœufs / Cattle</span><span>5</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="gircor-source" data-lang="fr">Source : GIRCOR v2.1 – 10/10/2025. Données officielles Ministère de la Recherche 2023 et Ministère de l'Agriculture 2022. Espérance de vie : 83 ans.</p>
+    <p class="gircor-source" data-lang="en">Source: GIRCOR v2.1 – 10/10/2025. Official data French Ministry of Research 2023 and Ministry of Agriculture 2022. Life expectancy: 83 years.</p>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="seq-bg">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Galerie · Publics</span>
+    <span class="section-tag" data-lang="en">Gallery · Audiences</span>
+    <h2 data-lang="fr">L'atelier en images</h2>
+    <h2 data-lang="en">The workshop in pictures</h2>
+    <div class="accent-line"></div>
+    <div class="gallery-grid">
+      <div class="gallery-item large">
+        <img src="IMG_1755.jpg" alt="Collégienne au cadre stéréotaxique">
+        <div class="caption" data-lang="fr">Fête de la science — manipulation du cadre stéréotaxique</div>
+        <div class="caption" data-lang="en">Science Festival — handling the stereotaxic frame</div>
+      </div>
+      <div class="gallery-item">
+        <img src="IMG_0563.jpg" alt="Injection encre de Chine">
+        <div class="caption" data-lang="fr">Injection d'encre de Chine dans l'agarose</div>
+        <div class="caption" data-lang="en">India ink injection into agarose</div>
+      </div>
+      <div class="gallery-item">
+        <img src="IMG_1748.jpg" alt="Lycéens atelier">
+        <div class="caption" data-lang="fr">Lycéens en atelier — Neurocentre Magendie</div>
+        <div class="caption" data-lang="en">High school students — Neurocentre Magendie</div>
+      </div>
+      <div class="gallery-item large">
+        <img src="IMG_1839.jpg" alt="Chercheuse et enfants autour du cadre">
+        <div class="caption" data-lang="fr">Vue d'ensemble — chercheuse et public en labo</div>
+        <div class="caption" data-lang="en">Overview — researcher and young audience in the lab</div>
+      </div>
+      <div class="gallery-item" style="grid-column: span 3;">
+        <img src="IMG_1795.jpg" alt="Chercheur chemise à carreau" style="height:280px;">
+        <div class="caption" data-lang="fr">Un atelier ouvert à tous les publics — même aux profs</div>
+        <div class="caption" data-lang="en">A workshop open to all audiences — even to the teachers</div>
+      </div>
+      <div class="gallery-item">
+        <img src="IMG_1848.jpg" alt="Petite fille au cadre stéréotaxique">
+        <div class="caption" data-lang="fr">Concentration maximale — même les plus jeunes s'approprient le geste</div>
+        <div class="caption" data-lang="en">Full concentration — even the youngest master the gesture</div>
+      </div>
+      <div class="gallery-item">
+        <img src="IMG_1771.jpg" alt="Transmission chercheur public">
+        <div class="caption" data-lang="fr">Fête de la science — transmission chercheur/public</div>
+        <div class="caption" data-lang="en">Science Festival — researcher/public exchange</div>
+      </div>
+      <div class="gallery-item">
+        <img src="IMG_1768.jpg" alt="Public familial Fête de la Science">
+        <div class="caption" data-lang="fr">Fête de la Science — public familial, tous âges</div>
+        <div class="caption" data-lang="en">Science Festival — families, all ages</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BRUSSELS -->
+<section class="brussels-bg">
+  <div class="container">
+    <span class="section-tag">Science is Wonderful! 2025</span>
+    <h2 data-lang="fr">Essaimage international — Bruxelles</h2>
+    <h2 data-lang="en">International outreach — Brussels</h2>
+    <div class="accent-line"></div>
+    <div class="brussels-grid">
+      <div class="brussels-stats">
+        <p data-lang="fr">Une version portable de l'atelier a été conçue — cadre stéréotaxique miniature tout plastique, transportable en avion — et présentée par <strong>Evangelia Kyriakidou</strong>, doctorante de l'équipe, lors de <strong>Science is Wonderful! 2025</strong>, l'événement phare des Actions Marie Skłodowska-Curie de la Commission Européenne, au Musée de l'Afrique à Bruxelles.</p>
+        <p data-lang="en">A portable version of the workshop was designed — a miniature all-plastic stereotaxic frame, airline-transportable — and presented by <strong>Evangelia Kyriakidou</strong>, PhD student in the team, at <strong>Science is Wonderful! 2025</strong>, the flagship event of the Marie Skłodowska-Curie Actions, European Commission, at the Africa Museum in Brussels.</p>
+        <div class="brussels-stat">
+          <strong>100+</strong>
+          <span data-lang="fr">cerveaux en agarose fabriqués et distribués</span>
+          <span data-lang="en">agarose brains made and distributed</span>
+        </div>
+        <div class="brussels-stat">
+          <strong>MSCA</strong>
+          <span data-lang="fr">Actions Marie Skłodowska-Curie · Commission Européenne</span>
+          <span data-lang="en">Marie Skłodowska-Curie Actions · European Commission</span>
+        </div>
+      </div>
+      <div class="brussels-photos">
+        <img src="ScienceIsWonderfull_2.jpeg" alt="Science is Wonderful 2025">
+        <img src="ScienceIsWonderfull_1.jpeg" alt="Stand Science is Wonderful">
+        <img src="ScienceIsWonderfull_3.jpeg" alt="Public Brussels">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section>
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Impact · Chiffres clés</span>
+    <span class="section-tag" data-lang="en">Impact · Key figures</span>
+    <h2 data-lang="fr">Un atelier qui voyage</h2>
+    <h2 data-lang="en">A workshop that travels</h2>
+    <div class="accent-line"></div>
+    <p data-lang="fr">En labo, en médiathèque, en école, à Bruxelles — l'atelier REMPLACER va à la rencontre des publics les plus divers, dans le laboratoire comme hors les murs.</p>
+    <p data-lang="en">In the lab, in libraries, in schools, in Brussels — the REMPLACER workshop meets the most diverse audiences, both in the laboratory and beyond its walls.</p>
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-num">2017</div>
+        <div class="impact-label" data-lang="fr">Première édition</div>
+        <div class="impact-label" data-lang="en">First edition</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-num">3–4</div>
+        <div class="impact-label" data-lang="fr">ateliers par an</div>
+        <div class="impact-label" data-lang="en">workshops per year</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-num">~300</div>
+        <div class="impact-label" data-lang="fr">participants par an</div>
+        <div class="impact-label" data-lang="en">participants per year</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-num">~1 000</div>
+        <div class="impact-label" data-lang="fr">participants au total</div>
+        <div class="impact-label" data-lang="en">total participants</div>
+      </div>
+    </div>
+    <p style="margin-top:2rem; font-size:0.9rem;" data-lang="fr">🏛️ <strong>Fête de la Science</strong> · <strong>Destination Labo</strong> (Inserm) · <strong>Semaine du Cerveau</strong> (Société des Neurosciences) · Portes ouvertes · Médiathèques · Cap Sciences · Collèges · Lycées · <strong>Science is Wonderful! 2025</strong> (MSCA, Bruxelles)</p>
+    <p style="margin-top:2rem; font-size:0.9rem;" data-lang="en">🏛️ <strong>Fête de la Science</strong> · <strong>Destination Labo</strong> (Inserm) · <strong>Brain Awareness Week</strong> (Société des Neurosciences) · Open days · Libraries · Cap Sciences · Schools · <strong>Science is Wonderful! 2025</strong> (MSCA, Brussels)</p>
+
+    <!-- Tweet embed -->
+    <div style="margin-top:2.5rem; display:flex; flex-direction:column; align-items:center;">
+      <p style="font-size:0.85rem; color:var(--grey); margin-bottom:1rem; text-align:center;" data-lang="fr">🎬 L'injection en vidéo — fil récapitulatif sur X (@G0ubz)</p>
+      <p style="font-size:0.85rem; color:var(--grey); margin-bottom:1rem; text-align:center;" data-lang="en">🎬 The injection on video — recap thread on X (@G0ubz)</p>
+      <blockquote class="twitter-tweet">
+        <a href="https://x.com/G0ubz/status/2061833893414600792"></a>
+      </blockquote>
+      <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    </div>
+  </div>
+</section>
+
+<!-- RESSOURCES -->
+<section style="background: var(--light);">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Ressources · Présentations</span>
+    <span class="section-tag" data-lang="en">Resources · Presentations</span>
+    <h2 data-lang="fr">Présentations disponibles</h2>
+    <h2 data-lang="en">Available presentations</h2>
+    <div class="accent-line"></div>
+    <p data-lang="fr">Deux présentations utilisées lors d'événements de médiation scientifique, librement consultables.</p>
+    <p data-lang="en">Two presentations used at science outreach events, freely available.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:2rem;">
+      <!-- Présentation 1 : Semaine du Cerveau -->
+      <div style="background:white; border-radius:1rem; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <div style="background:var(--blue); padding:1.25rem 1.5rem;">
+          <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem;" data-lang="fr">Semaine du Cerveau 2026</div>
+          <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem;" data-lang="en">Brain Awareness Week 2026</div>
+          <div style="font-family:'Playfair Display',serif; font-size:1.1rem; color:white; font-weight:700; line-height:1.3;" data-lang="fr">Comment notre cerveau contrôle-t-il notre comportement alimentaire ?</div>
+          <div style="font-family:'Playfair Display',serif; font-size:1.1rem; color:white; font-weight:700; line-height:1.3;" data-lang="en">How does our brain control our eating behaviour?</div>
+          <div style="font-size:0.8rem; color:rgba(255,255,255,0.6); margin-top:0.5rem;">Philippe ZIZZARI · Neurocentre Magendie (INSERM)</div>
+        </div>
+        <div style="padding:0;">
+          <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQbjFarJPmnh7p0CNu7mLCUn9YtwriUBN3jxdZ1KUzvCEQf5aM7oVq_v_o7TTWLDMipd56H_ujS_r4d/pubembed?start=false&loop=false&delayms=3000" frameborder="0" width="100%" height="320" allowfullscreen="true" style="display:block;"></iframe>
+        </div>
+      </div>
+
+      <!-- Présentation 2 : Le sport fait-il maigrir ? -->
+      <div style="background:white; border-radius:1rem; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <div style="background:var(--teal); padding:1.25rem 1.5rem;">
+          <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.7); margin-bottom:0.4rem;" data-lang="fr">Fête de la Science 2023 · Village des Sciences · Cap Sciences, Bordeaux</div>
+          <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.7); margin-bottom:0.4rem;" data-lang="en">Science Festival 2023 · Science Village · Cap Sciences, Bordeaux</div>
+          <div style="font-family:'Playfair Display',serif; font-size:1.1rem; color:white; font-weight:700; line-height:1.3;" data-lang="fr">Le sport fait-il maigrir ?</div>
+          <div style="font-family:'Playfair Display',serif; font-size:1.1rem; color:white; font-weight:700; line-height:1.3;" data-lang="en">Does exercise make you lose weight?</div>
+          <div style="font-size:0.8rem; color:rgba(255,255,255,0.6); margin-top:0.5rem;">C. Allard, V. Jouque, J-C. Nicolas, P. ZIZZARI · Neurocentre Magendie (INSERM)</div>
+        </div>
+        <div style="padding:0;">
+          <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSmTSGDh3YY5QGAT3JkrtKut6zW8MXezS7pyL1d6SMSSNfFkfV1YNQwUgJ2F6HcC90BhwqanxC-CzIY/pubembed?start=false&loop=false&delayms=3000" frameborder="0" width="100%" height="320" allowfullscreen="true" style="display:block;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ressources externes -->
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-top:2rem;">
+      <a href="https://www.fc3r.com" target="_blank" style="background:white; border-radius:0.75rem; padding:1.25rem; text-decoration:none; box-shadow:0 2px 12px rgba(0,0,0,0.06); border-left:4px solid var(--teal); display:block; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:1.5rem; margin-bottom:0.5rem;">🐾</div>
+        <div style="font-weight:700; color:var(--blue); font-size:0.9rem; margin-bottom:0.25rem;">FC3R</div>
+        <div style="font-size:0.8rem; color:var(--grey);" data-lang="fr">Centre français des 3R — fiche pédagogique sur le principe des 3R</div>
+        <div style="font-size:0.8rem; color:var(--grey);" data-lang="en">French 3R Centre — educational resource on the 3R principle</div>
+      </a>
+      <a href="https://www.gircor.fr" target="_blank" style="background:white; border-radius:0.75rem; padding:1.25rem; text-decoration:none; box-shadow:0 2px 12px rgba(0,0,0,0.06); border-left:4px solid var(--mid); display:block; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:1.5rem; margin-bottom:0.5rem;">📊</div>
+        <div style="font-weight:700; color:var(--blue); font-size:0.9rem; margin-bottom:0.25rem;">GIRCOR</div>
+        <div style="font-size:0.8rem; color:var(--grey);" data-lang="fr">Données officielles sur l'utilisation des animaux en France</div>
+        <div style="font-size:0.8rem; color:var(--grey);" data-lang="en">Official data on animal use in France</div>
+      </a>
+      <a href="https://labs.gaidi.ca/mouse-brain-atlas/?ml=0.3&ap=-1.5&dv=-5.85" target="_blank" style="background:white; border-radius:0.75rem; padding:1.25rem; text-decoration:none; box-shadow:0 2px 12px rgba(0,0,0,0.06); border-left:4px solid var(--accent); display:block; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:1.5rem; margin-bottom:0.5rem;">🧠</div>
+        <div style="font-weight:700; color:var(--blue); font-size:0.9rem; margin-bottom:0.25rem;">Mouse Brain Atlas</div>
+        <div style="font-size:0.8rem; color:var(--grey);" data-lang="fr">Le « GPS du cerveau de souris » — atlas interactif en ligne</div>
+        <div style="font-size:0.8rem; color:var(--grey);" data-lang="en">The "mouse brain GPS" — interactive online atlas</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section">
+  <div class="container">
+    <span class="section-tag" data-lang="fr">Contact · Équipe</span>
+    <span class="section-tag" data-lang="en">Contact · Team</span>
+    <h2 data-lang="fr">Vous souhaitez accueillir l'atelier ?</h2>
+    <h2 data-lang="en">Want to host the workshop?</h2>
+    <div class="accent-line" style="margin: 0 auto 0;"></div>
+    <div class="contact-card">
+      <p data-lang="fr"><strong>Philippe ZIZZARI</strong><br>Ingénieur de Recherche INSERM<br>Neurocentre Magendie — INSERM U1215<br>Université de Bordeaux<br><br>Équipe dirigée par <strong>Daniela COTA</strong><br>Physiopathologie de l'équilibre énergétique et obésité</p>
+      <p data-lang="en"><strong>Philippe ZIZZARI</strong><br>Research Engineer, INSERM<br>Neurocentre Magendie — INSERM U1215<br>University of Bordeaux<br><br>Team led by <strong>Daniela COTA</strong><br>Pathophysiology of energy balance and obesity</p>
+      <a href="mailto:philippe.zizzari@inserm.fr" class="btn btn-accent">philippe.zizzari@inserm.fr</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p data-lang="fr">Atelier REMPLACER · Neurocentre Magendie INSERM U1215 · Université de Bordeaux · <a href="https://www.fc3r.com" target="_blank">FC3R</a> · <a href="https://www.gircor.fr" target="_blank">GIRCOR</a></p>
+  <p data-lang="en">REMPLACER Workshop · Neurocentre Magendie INSERM U1215 · University of Bordeaux · <a href="https://www.fc3r.com" target="_blank">FC3R</a> · <a href="https://www.gircor.fr" target="_blank">GIRCOR</a></p>
+  <p style="margin-top:0.75rem; opacity:0.7;">
+    <span data-lang="fr">👁️ <strong id="gc-count" style="color:var(--accent);">…</strong> visites</span>
+    <span data-lang="en">👁️ <strong id="gc-count-en" style="color:var(--accent);">…</strong> views</span>
+  </p>
+</footer>
+
+<!-- SCRIPT UNIQUE POUR LE CALCULATEUR ET LA LANGUE -->
+<script>
+// === TOOLTIPS ===
+function tipToggle(id) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  const isActive = box.classList.contains('active');
+  // Fermer tous les autres tooltips ouverts
+  document.querySelectorAll('.tip-box.active').forEach(b => {
+    b.classList.remove('active');
+    b.previousElementSibling && b.previousElementSibling.classList.remove('active');
+  });
+  document.querySelectorAll('.tip-btn.active').forEach(b => b.classList.remove('active'));
+  if (!isActive) {
+    box.classList.add('active');
+    // Marquer le bouton aussi
+    const btn = box.previousElementSibling;
+    if (btn && btn.classList.contains('tip-btn')) btn.classList.add('active');
+  }
+}
+
+// Fermer au tap en dehors
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.tip-wrap')) {
+    document.querySelectorAll('.tip-box.active').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tip-btn.active').forEach(b => b.classList.remove('active'));
+  }
+});
+
+// Hover desktop : ouvrir au survol sans clic
+// Utilise une fonction réutilisable pour attacher les événements à n'importe quel conteneur
+function initTipHover(root) {
+  if (!window.matchMedia('(hover: hover)').matches) return;
+  (root || document).querySelectorAll('.tip-btn').forEach(btn => {
+    if (btn._tipHoverInit) return; // éviter les doublons
+    btn._tipHoverInit = true;
+    const wrap = btn.closest('.tip-wrap');
+    if (!wrap) return;
+    const box = wrap.querySelector('.tip-box');
+    if (!box) return;
+    wrap.addEventListener('mouseenter', () => box.classList.add('active'));
+    wrap.addEventListener('mouseleave', () => {
+      if (!btn.classList.contains('active')) box.classList.remove('active');
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les tooltips visibles dès le chargement
+  initTipHover(document);
+
+  // Ré-initialiser quand un <details> s'ouvre (contenu précédemment caché)
+  document.querySelectorAll('details').forEach(det => {
+    det.addEventListener('toggle', function() {
+      if (det.open) initTipHover(det);
+    });
+  });
+});
+
+// === FONCTIONS DE LANGUE ===
+function setLang(lang) {
+  document.body.classList.remove('en', 'fr');
+  document.body.classList.add(lang);
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase() === lang);
+  });
+  // Enregistre l'événement pour GoatCounter (si disponible)
+  if (window.goatcounter && window.goatcounter.count) {
+    window.goatcounter.count({
+      path: 'lang-' + lang,
+      title: 'Langue : ' + lang.toUpperCase(),
+      event: true
+    });
+  }
+}
+
+// === CONFIGURATION DU CALCULATEUR GLP-1 ===
+const glp1_scenarios = {
+  // weight(kg), wloss(%) -> kcal calculé automatiquement
+  // conservateur : non-répondeurs, poids modéré, régime mixte
+  conservative: { rdAnimals: 1000000, rdCo2: 2000000, patients: 35,  weight: 95,  wloss: 7,  years: 5,  kcal_animal: 7000, animal_share: 25 },
+  // réaliste : résultats STEP-1 sémaglutide, poids moyen, régime mixte
+  realistic:    { rdAnimals: 500000, rdCo2: 2000000, patients: 80,  weight: 100, wloss: 15, years: 7,  kcal_animal: 8000, animal_share: 50 },
+  // optimiste : résultats SURMOUNT-1 tirzepatide, poids élevé, régime riche en protéines animales
+  optimistic:   { rdAnimals: 200000, rdCo2: 2000000, patients: 150, weight: 115, wloss: 22, years: 10, kcal_animal: 7500, animal_share: 75 }
+};
+
+function glp1_setScenario(s) {
+  const p = glp1_scenarios[s];
+  document.getElementById('glp1-rd-animals').value   = p.rdAnimals;
+  document.getElementById('glp1-rd-co2').value       = p.rdCo2;
+  document.getElementById('glp1-patients').value     = p.patients;
+  document.getElementById('glp1-weight').value       = p.weight;
+  document.getElementById('glp1-wloss').value        = p.wloss;
+  document.getElementById('glp1-years').value        = p.years;
+  document.getElementById('glp1-kcal-animal').value  = p.kcal_animal;
+  document.getElementById('glp1-animal-share').value = p.animal_share;
+  glp1_updateCalcs();
+}
+
+function glp1_formatNum(num) {
+  if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+  if (num >= 1e9)  return (num / 1e9).toFixed(2)  + 'B';
+  if (num >= 1e6)  return (num / 1e6).toFixed(1)  + 'M';
+  if (num >= 1e3)  return (num / 1e3).toFixed(1)  + 'K';
+  return Math.round(num).toLocaleString();
+}
+
+// Calcul des résultats pour un jeu de paramètres donné
+function glp1_compute(p) {
+  const kcal = Math.round((p.weight * (p.wloss/100) * 7700) / 365);
+  const totalKcal = p.patients * 1e6 * kcal * 365 * p.years;
+  const animals = Math.round((totalKcal * (p.animal_share/100)) / p.kcal_animal);
+  const ratio   = p.rdAnimals > 0 ? Math.round(animals / p.rdAnimals) : 0;
+  const co2PerYear = (p.patients * 1e6 * 1315) / 1000;
+  const animalsPerDay = animals > 0 ? animals / (p.years * 365) : 1;
+  const animalPaybackDays = animals > 0 ? Math.round(p.rdAnimals / animalsPerDay) : 0;
+  const co2PaybackDays = Math.round(p.rdCo2 / (co2PerYear / 365));
+  return { animals, ratio, co2PerYear, animalPaybackDays, co2PaybackDays, kcal };
+}
+
+function glp1_getResults() {
+  const rdAnimals   = parseInt(document.getElementById('glp1-rd-animals').value);
+  const rdCO2       = parseInt(document.getElementById('glp1-rd-co2').value);
+  const patients    = parseInt(document.getElementById('glp1-patients').value);
+  const years       = parseInt(document.getElementById('glp1-years').value);
+  const kcal_animal = parseInt(document.getElementById('glp1-kcal-animal').value);
+  const animalShare = parseInt(document.getElementById('glp1-animal-share').value);
+  const weight      = parseInt(document.getElementById('glp1-weight').value);
+  const wloss       = parseInt(document.getElementById('glp1-wloss').value);
+
+  // Résultat avec les paramètres actuels
+  const cur = glp1_compute({ rdAnimals, rdCo2: rdCO2, patients, weight, wloss,
+                               years, kcal_animal, animal_share: animalShare });
+
+  // Fourchettes via les 3 scénarios (coûts R&D fixes = paramètres actuels)
+  const sc = ['conservative','realistic','optimistic'].map(name => {
+    const s = glp1_scenarios[name];
+    return glp1_compute({
+      rdAnimals, rdCo2: rdCO2,          // coûts R&D = valeurs actuelles du slider
+      patients:     s.patients,
+      weight:       s.weight,
+      wloss:        s.wloss,
+      years:        s.years,
+      kcal_animal:  s.kcal_animal,
+      animal_share: s.animal_share
+    });
+  });
+
+  const range = (key) => {
+    const vals = sc.map(s => s[key]).filter(v => v > 0);
+    if (!vals.length) return { low: 0, high: 0 };
+    return { low: Math.min(...vals), high: Math.max(...vals) };
+  };
+
+  const wlossF = wloss / 100;
+  const kcal = cur.kcal;
+
+  return {
+    rdAnimals, rdCO2, patients, kcal, years, kcal_animal,
+    animalShare: animalShare / 100, weight, wloss: wlossF,
+    weightLostKg: weight * wlossF,
+    animals:          cur.animals,
+    ratio:            cur.ratio,
+    co2PerYear:       cur.co2PerYear,
+    animalPaybackDays: cur.animalPaybackDays,
+    co2PaybackDays:   cur.co2PaybackDays,
+    range: {
+      animals:          range('animals'),
+      ratio:            range('ratio'),
+      co2:              range('co2PerYear'),
+      paybackAnimal:    range('animalPaybackDays'),
+      paybackCo2:       range('co2PaybackDays')
+    }
+  };
+}
+
+function glp1_formatRdCo2(v) {
+  if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
+  return (v/1000).toFixed(0) + 'k';
+}
+
+function glp1_fmtRange(r, isFr, suffix) {
+  if (!r || r.low === r.high) return '';
+  const s = suffix || '';
+  return isFr
+    ? 'Fourchette : ' + glp1_formatNum(r.low) + s + ' – ' + glp1_formatNum(r.high) + s
+    : 'Range: ' + glp1_formatNum(r.low) + s + ' – ' + glp1_formatNum(r.high) + s;
+}
+
+function glp1_updateCalcs() {
+  const res = glp1_getResults();
+  const isFr = !document.body.classList.contains('en');
+
+  // Sliders labels
+  document.getElementById('glp1-rd-animals-val').textContent  = res.rdAnimals.toLocaleString();
+  document.getElementById('glp1-rd-co2-val').textContent      = glp1_formatRdCo2(res.rdCO2);
+  document.getElementById('glp1-patients-val').textContent    = res.patients;
+  document.getElementById('glp1-weight-val').textContent      = res.weight;
+  document.getElementById('glp1-wloss-val').textContent       = Math.round(res.wloss * 100);
+  document.getElementById('glp1-years-val').textContent       = res.years;
+  document.getElementById('glp1-kcal-animal-val').textContent = res.kcal_animal.toLocaleString();
+  document.getElementById('glp1-animal-share-val').textContent = Math.round(res.animalShare * 100);
+
+  // Réduction calorique calculée
+  document.getElementById('glp1-kcal-computed').textContent = res.kcal.toLocaleString();
+
+  // Résultats principaux
+  document.getElementById('glp1-animals').textContent         = glp1_formatNum(res.animals);
+  document.getElementById('glp1-ratio').textContent           = glp1_formatNum(res.ratio);
+  document.getElementById('glp1-co2').textContent             = glp1_formatNum(res.co2PerYear);
+  document.getElementById('glp1-payback-animal').textContent  = res.animalPaybackDays < 1 ? '<1' : res.animalPaybackDays;
+  document.getElementById('glp1-payback-co2').textContent     = res.co2PaybackDays < 1 ? '<1' : res.co2PaybackDays;
+
+  // Fourchettes via les 3 scénarios
+  const setRange = (id, r, suffix) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = glp1_fmtRange(r, isFr, suffix);
+  };
+  setRange('glp1-range-animals',       res.range.animals,       '');
+  setRange('glp1-range-ratio',         res.range.ratio,         ':1');
+  setRange('glp1-range-co2',           res.range.co2,           ' t');
+  setRange('glp1-range-payback-animal',res.range.paybackAnimal,  isFr ? ' j' : ' d');
+  setRange('glp1-range-payback-co2',   res.range.paybackCo2,    isFr ? ' j' : ' d');
+}
+
+// === FONCTIONS D'EXPORT ===
+function glp1_exportPNG() {
+  const res = glp1_getResults();
+
+  // Update export container
+  document.getElementById('glp1-exp-rd-animals-txt').textContent  = res.rdAnimals.toLocaleString();
+  document.getElementById('glp1-exp-rd-co2-txt').textContent      = glp1_formatRdCo2(res.rdCO2) + ' t';
+  document.getElementById('glp1-exp-patients-txt').textContent    = res.patients;
+  document.getElementById('glp1-exp-kcal-txt').textContent        = res.kcal;
+  document.getElementById('glp1-exp-years-txt').textContent       = res.years;
+  document.getElementById('glp1-exp-kcal-animal-txt').textContent = res.kcal_animal.toLocaleString();
+
+  // Progress bars
+  document.getElementById('glp1-exp-bar-rd-animals').style.width = Math.min((res.rdAnimals / 2000000) * 100, 100) + '%';
+  document.getElementById('glp1-exp-bar-rd-co2').style.width     = Math.min((res.rdCO2 / 2000000) * 100, 100) + '%';
+  document.getElementById('glp1-exp-bar-patients').style.width   = (res.patients / 200) * 100 + '%';
+  document.getElementById('glp1-exp-bar-kcal').style.width       = (res.kcal / 800) * 100 + '%';
+  document.getElementById('glp1-exp-bar-years').style.width      = (res.years / 15) * 100 + '%';
+  document.getElementById('glp1-exp-bar-animal').style.width     = (res.kcal_animal / 40000) * 100 + '%';
+
+  // Results
+  document.getElementById('glp1-exp-animals').textContent         = glp1_formatNum(res.animals);
+  document.getElementById('glp1-exp-ratio').textContent           = glp1_formatNum(res.ratio) + ':1';
+  document.getElementById('glp1-exp-co2').textContent             = glp1_formatNum(res.co2PerYear) + ' t';
+  document.getElementById('glp1-exp-payback-animal').textContent  = res.animalPaybackDays + ' days';
+  document.getElementById('glp1-exp-payback-co2').textContent     = res.co2PaybackDays + ' days';
+
+  const element = document.getElementById('glp1-export-container');
+  element.style.display = 'block';
+
+  document.fonts.ready.then(() => {
+    html2canvas(element, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true }).then(canvas => {
+      element.style.display = 'none';
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'GLP1-Impact-Calculator.png';
+      link.click();
+    }).catch(err => {
+      element.style.display = 'none';
+      alert('Erreur export PNG: ' + err);
+    });
+  });
+}
+
+function glp1_exportEmail() {
+  glp1_exportPNG();
+  const res = glp1_getResults();
+  const subject = encodeURIComponent('Résultats GLP-1 Impact Calculator / REMPLACER Workshop');
+  const body = encodeURIComponent(
+    'Voir l\'image PNG jointe / See attached PNG image\n\n' +
+    'Paramètres / Parameters:\n' +
+    '- R&D animals: ' + res.rdAnimals.toLocaleString() + '\n' +
+    '- R&D CO2: ' + glp1_formatRdCo2(res.rdCO2) + ' tonnes\n' +
+    '- Patients (2030): ' + res.patients + 'M\n' +
+    '- Baseline weight: ' + res.weight + ' kg\n' +
+    '- Weight loss: ' + Math.round(res.wloss * 100) + '%\n' +
+    '- Caloric reduction (calculated): ' + res.kcal + ' kcal/day\n' +
+    '- Animal share of calories: ' + Math.round(res.animalShare * 100) + '%\n' +
+    '- Years: ' + res.years + '\n' +
+    '- Kcal/animal: ' + res.kcal_animal + '\n\n' +
+    'Résultats / Results:\n' +
+    '- Animal-equivalents: ' + glp1_formatNum(res.animals) + '\n' +
+    '- Ethical ratio: ' + glp1_formatNum(res.ratio) + ':1\n' +
+    '- CO2 saved/year: ' + glp1_formatNum(res.co2PerYear) + ' tonnes\n' +
+    '- Animal payback: ' + res.animalPaybackDays + ' days\n' +
+    '- CO2 payback: ' + res.co2PaybackDays + ' days\n\n' +
+    '---\nREMPLACER Workshop\nhttps://g0ub.github.io/remplacer/\nNeurocentre Magendie – INSERM U1215'
+  );
+  setTimeout(() => { window.location.href = 'mailto:?subject=' + subject + '&body=' + body; }, 800);
+}
+
+function glp1_exportCSV() {
+  const res = glp1_getResults();
+  const csv = [
+    ['GLP-1 Impact Calculator Results'],
+    [],
+    ['Parameter', 'Value'],
+    ['R&D Animals', res.rdAnimals],
+    ['R&D CO2 (tonnes)', res.rdCO2],
+    ['Treated patients (2030)', res.patients + 'M'],
+    ['Baseline weight', res.weight + ' kg'],
+    ['Weight loss (%)', Math.round(res.wloss * 100) + '%'],
+    ['Caloric reduction/day (calculated)', res.kcal + ' kcal'],
+    ['Animal share of calories', Math.round(res.animalShare * 100) + '%'],
+    ['Treatment duration', res.years + ' years'],
+    ['Kcal per animal', res.kcal_animal],
+    [],
+    ['Result', 'Value'],
+    ['Animal-equivalents', res.animals.toLocaleString()],
+    ['Ethical ratio', glp1_formatNum(res.ratio) + ':1'],
+    ['CO2 saved/year', glp1_formatNum(res.co2PerYear) + ' tonnes'],
+    ['Animal payback', res.animalPaybackDays + ' days'],
+    ['CO2 payback', res.co2PaybackDays + ' days'],
+    [],
+    ['Generated', new Date().toLocaleString()]
+  ].map(r => r.join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'GLP1-Impact-Calculator.csv';
+  link.click();
+}
+
+function glp1_shareLink() {
+  const res = glp1_getResults();
+  const params = 'ra=' + res.rdAnimals + '&rc=' + res.rdCO2 +
+                 '&p=' + res.patients + '&w=' + res.weight +
+                 '&wl=' + Math.round(res.wloss * 100) +
+                 '&y=' + res.years + '&a=' + res.kcal_animal +
+                 '&as=' + Math.round(res.animalShare * 100);
+  const url = window.location.origin + window.location.pathname + '?' + params;
+
+  if (navigator.share) {
+    navigator.share({ title: 'GLP-1 Impact Calculator', url: url });
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Lien copié ! / Link copied!\n\n' + url);
+    }).catch(() => { alert('Lien / Link:\n\n' + url); });
+  }
+}
+
+// === INITIALISATION ===
+document.addEventListener('DOMContentLoaded', () => {
+  glp1_updateCalcs();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('p')) {
+    if (params.has('ra')) document.getElementById('glp1-rd-animals').value = params.get('ra');
+    if (params.has('rc')) document.getElementById('glp1-rd-co2').value     = params.get('rc');
+    document.getElementById('glp1-patients').value    = params.get('p');
+    document.getElementById('glp1-weight').value      = params.get('w') || '100';
+    document.getElementById('glp1-wloss').value       = params.get('wl') || '15';
+    document.getElementById('glp1-years').value       = params.get('y') || '7';
+    document.getElementById('glp1-kcal-animal').value = params.get('a') || '8000';
+    if (params.has('as')) document.getElementById('glp1-animal-share').value = params.get('as');
+    glp1_updateCalcs();
+  }
+
+  setLang('fr');
+
+  // Charge le compteur GoatCounter
+  fetch('https://remplacer.goatcounter.com/counter/TOTAL.json')
+    .then(r => r.json())
+    .then(data => {
+      const fr = document.getElementById('gc-count');
+      const en = document.getElementById('gc-count-en');
+      if (fr) fr.textContent = data.count;
+      if (en) en.textContent = data.count;
+    })
+    .catch(() => {
+      const fr = document.getElementById('gc-count');
+      const en = document.getElementById('gc-count-en');
+      if (fr) fr.textContent = '—';
+      if (en) en.textContent = '—';
+    });
+});
+</script>
+
+<!-- GoatCounter -->
+<script data-goatcounter="https://remplacer.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
