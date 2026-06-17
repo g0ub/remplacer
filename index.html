@@ -1960,7 +1960,21 @@ function glp1_setScenario(s) {
   document.getElementById('glp1-years').value        = p.years;
   document.getElementById('glp1-kcal-animal').value  = p.kcal_animal;
   document.getElementById('glp1-animal-share').value = p.animal_share;
+  glp1_updateScenarioButtons(s);
   glp1_updateCalcs();
+}
+
+function glp1_updateScenarioButtons(active) {
+  const colors = { conservative: '--teal', realistic: '--accent', optimistic: '--mid' };
+  document.querySelectorAll('button[onclick*="glp1_setScenario"]').forEach(btn => {
+    const m = btn.getAttribute('onclick').match(/glp1_setScenario\('(\w+)'\)/);
+    if (!m) return;
+    const col = `var(${colors[m[1]] || '--mid'})`;
+    const on = m[1] === active;
+    btn.style.background  = on ? col : 'white';
+    btn.style.color       = on ? 'white' : col;
+    btn.style.borderColor = col;
+  });
 }
 
 function glp1_formatNum(num) {
@@ -2214,6 +2228,7 @@ function glp1_shareLink() {
 // === INITIALISATION ===
 document.addEventListener('DOMContentLoaded', () => {
   glp1_updateCalcs();
+  glp1_updateScenarioButtons('realistic');
 
   const params = new URLSearchParams(window.location.search);
   if (params.has('p')) {
