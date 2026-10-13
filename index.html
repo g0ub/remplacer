@@ -2263,6 +2263,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+    window.goatcounter = {
+        path: function(p) {
+            // Si le site qui charge le script n'est pas le vôtre, on bloque tout
+            if (window.location.host !== 'g0ub.github.io') {
+                return null; 
+            }
+            return p; 
+        }
+    }
+</script>  
+  
 <!-- GoatCounter -->
 <script data-goatcounter="https://remplacer.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
